@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Integer, Boolean, Float, DateTime, JSON, Text, UniqueConstraint, Index
+from sqlalchemy import Column, String, Integer, Boolean, Float, DateTime, JSON, Text, UniqueConstraint
 from database import Base
 
 
@@ -28,17 +28,27 @@ class User(Base):
     country = Column(String(100), nullable=True)
     continent = Column(String(50), nullable=True)
 
-    # XP per category
+    # XP per category (All-Time)
     xp_series_tv = Column(Integer, default=0)
     xp_geographie = Column(Integer, default=0)
     xp_histoire = Column(Integer, default=0)
     total_xp = Column(Integer, default=0)
+
+    # Seasonal XP (reset monthly)
+    seasonal_xp_series_tv = Column(Integer, default=0)
+    seasonal_xp_geographie = Column(Integer, default=0)
+    seasonal_xp_histoire = Column(Integer, default=0)
+    seasonal_total_xp = Column(Integer, default=0)
+    season_month = Column(String(7), nullable=True)  # "2026-03"
 
     # Stats
     matches_played = Column(Integer, default=0)
     matches_won = Column(Integer, default=0)
     best_streak = Column(Integer, default=0)
     current_streak = Column(Integer, default=0)
+
+    # MMR (hidden matchmaking rating)
+    mmr = Column(Float, default=1000.0)
 
     created_at = Column(DateTime(timezone=True), default=utc_now)
 
@@ -49,8 +59,8 @@ class Question(Base):
     id = Column(String(36), primary_key=True, default=generate_uuid)
     category = Column(String(100), nullable=False, index=True)
     question_text = Column(Text, nullable=False)
-    options = Column(JSON, nullable=False)  # Array of 4 strings
-    correct_option = Column(Integer, nullable=False)  # Index 0-3
+    options = Column(JSON, nullable=False)
+    correct_option = Column(Integer, nullable=False)
     difficulty = Column(String(20), default='medium')
     created_at = Column(DateTime(timezone=True), default=utc_now)
 
@@ -70,6 +80,9 @@ class Match(Base):
     category = Column(String(100), nullable=False)
     player1_score = Column(Integer, default=0)
     player2_score = Column(Integer, default=0)
+    player1_correct = Column(Integer, default=0)
     winner_id = Column(String(36), nullable=True)
-    questions_data = Column(JSON, nullable=True)  # Store question IDs + answers
+    xp_earned = Column(Integer, default=0)
+    xp_breakdown = Column(JSON, nullable=True)  # {base, victory, perfection, giant_slayer, streak}
+    questions_data = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), default=utc_now)

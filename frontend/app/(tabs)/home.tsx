@@ -28,12 +28,23 @@ type Category = {
   question_count: number;
 };
 
+const BADGE_MAP: Record<string, string> = { fire: '🔥', bolt: '⚡', glow: '✨' };
+
+function getStreakBadge(streak: number): string {
+  if (streak >= 10) return 'glow';
+  if (streak >= 5) return 'bolt';
+  if (streak >= 3) return 'fire';
+  return '';
+}
+
 export default function HomeScreen() {
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [pseudo, setPseudo] = useState('');
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [userLevel, setUserLevel] = useState(0);
   const fadeAnims = useRef([new Animated.Value(0), new Animated.Value(0), new Animated.Value(0)]).current;
   const playBtnAnim = useRef(new Animated.Value(0)).current;
 
@@ -44,6 +55,17 @@ export default function HomeScreen() {
   const loadData = async () => {
     const storedPseudo = await AsyncStorage.getItem('duelo_pseudo');
     if (storedPseudo) setPseudo(storedPseudo);
+
+    // Load user stats for streak display
+    const userId = await AsyncStorage.getItem('duelo_user_id');
+    if (userId) {
+      try {
+        const userRes = await fetch(`${API_URL}/api/auth/user/${userId}`);
+        const userData = await userRes.json();
+        if (userData.current_streak !== undefined) setCurrentStreak(userData.current_streak);
+        if (userData.total_xp !== undefined) setUserLevel(userData.total_xp);
+      } catch {}
+    }
 
     try {
       const res = await fetch(`${API_URL}/api/categories`);
@@ -93,8 +115,17 @@ export default function HomeScreen() {
             <Text style={styles.playerName}>{pseudo || 'Joueur'}</Text>
           </View>
           <View style={styles.streakBadge}>
-            <Text style={styles.streakIcon}>🔥</Text>
-            <Text style={styles.streakText}>Prêt</Text>
+            {currentStreak >= 3 ? (
+              <>
+                <Text style={styles.streakIcon}>{BADGE_MAP[getStreakBadge(currentStreak)] || '🔥'}</Text>
+                <Text style={[styles.streakText, { color: currentStreak >= 10 ? '#00FFFF' : currentStreak >= 5 ? '#FFA500' : '#FF6B35' }]}>{currentStreak}</Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.streakIcon}>⚡</Text>
+                <Text style={styles.streakText}>Prêt</Text>
+              </>
+            )}
           </View>
         </View>
 

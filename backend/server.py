@@ -60,6 +60,7 @@ class UserResponse(BaseModel):
     matches_won: int = 0
     best_streak: int = 0
     current_streak: int = 0
+    mmr: float = 1000.0
 
 class QuestionOut(BaseModel):
     id: str
@@ -76,6 +77,8 @@ class MatchSubmit(BaseModel):
     opponent_score: int
     opponent_pseudo: str
     opponent_is_bot: bool
+    correct_count: int = 0
+    opponent_level: int = 1
     questions_data: Optional[list] = None
 
 class MatchResponse(BaseModel):
@@ -86,7 +89,10 @@ class MatchResponse(BaseModel):
     category: str
     player1_score: int
     player2_score: int
+    player1_correct: int = 0
     winner_id: Optional[str] = None
+    xp_earned: int = 0
+    xp_breakdown: Optional[dict] = None
     created_at: str
 
 class BulkImportRequest(BaseModel):
@@ -156,6 +162,8 @@ CATEGORY_XP_FIELD = {
     "geographie": "xp_geographie",
     "histoire": "xp_histoire"
 }
+
+TOTAL_QUESTIONS = 7
 
 # ── Auth Routes ──
 
@@ -302,23 +310,94 @@ async def get_game_questions(category: str, db: AsyncSession = Depends(get_db)):
     ]
 
 
+STREAK_BONUSES = {3: 10, 5: 25, 10: 50}  # streak_count: bonus_xp
+
+def get_streak_bonus(streak: int) -> int:
+    """Returns cumulative streak bonus XP."""
+    if streak >= 10:
+        return 50
+    if streak >= 5:
+        return 25
+    if streak >= 3:
+        return 10
+    return 0
+
+def get_streak_badge(streak: int) -> str:
+    """Returns badge emoji based on streak."""
+    if streak >= 10:
+        return "glow"
+    if streak >= 5:
+        return "bolt"
+    if streak >= 3:
+        return "fire"
+    return ""
+
+def get_current_season() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m")
+
+def ensure_season(user):
+    """Reset seasonal XP if we're in a new month."""
+    current = get_current_season()
+    if user.season_month != current:
+        user.seasonal_xp_series_tv = 0
+        user.seasonal_xp_geographie = 0
+        user.seasonal_xp_histoire = 0
+        user.seasonal_total_xp = 0
+        user.season_month = current
+
+
 @api_router.post("/game/matchmaking")
 async def start_matchmaking(db: AsyncSession = Depends(get_db)):
-    """Returns a bot opponent (real matchmaking would need websockets)"""
+    """Returns a bot opponent with realistic stats."""
     bot_name = random.choice(BOT_NAMES)
     bot_seed = secrets.token_hex(4)
+    bot_level = random.randint(1, 40)
+    bot_streak = random.choice([0, 0, 0, 1, 2, 3, 4, 5])
     return {
         "opponent": {
             "pseudo": bot_name,
             "avatar_seed": bot_seed,
-            "is_bot": True
+            "is_bot": True,
+            "level": bot_level,
+            "streak": bot_streak,
+            "streak_badge": get_streak_badge(bot_streak),
         }
     }
 
 
 @api_router.post("/game/submit", response_model=MatchResponse)
 async def submit_match(data: MatchSubmit, db: AsyncSession = Depends(get_db)):
-    # Create match record
+    result = await db.execute(select(User).where(User.id == data.player_id))
+    user = result.scalar_one_or_none()
+
+    won = data.player_score > data.opponent_score
+    perfect = data.correct_count == TOTAL_QUESTIONS
+
+    # ── XP Calculation ──
+    base_xp = data.player_score * 2
+    victory_bonus = 50 if won else 0
+    perfection_bonus = 50 if perfect else 0
+
+    # Giant Slayer: beat opponent 15+ levels higher
+    player_level = get_level(user.total_xp) if user else 1
+    giant_slayer_bonus = 100 if (won and data.opponent_level - player_level >= 15) else 0
+
+    # Streak bonus (calculated AFTER updating streak)
+    new_streak = (user.current_streak + 1) if (user and won) else 0
+    streak_bonus = get_streak_bonus(new_streak) if won else 0
+
+    total_xp = base_xp + victory_bonus + perfection_bonus + giant_slayer_bonus + streak_bonus
+
+    xp_breakdown = {
+        "base": base_xp,
+        "victory": victory_bonus,
+        "perfection": perfection_bonus,
+        "giant_slayer": giant_slayer_bonus,
+        "streak": streak_bonus,
+        "total": total_xp,
+    }
+
+    # ── Create match record ──
     match = Match(
         player1_id=data.player_id,
         player2_pseudo=data.opponent_pseudo,
@@ -326,22 +405,19 @@ async def submit_match(data: MatchSubmit, db: AsyncSession = Depends(get_db)):
         category=data.category,
         player1_score=data.player_score,
         player2_score=data.opponent_score,
-        winner_id=data.player_id if data.player_score > data.opponent_score else None,
-        questions_data=data.questions_data
+        player1_correct=data.correct_count,
+        winner_id=data.player_id if won else None,
+        xp_earned=total_xp,
+        xp_breakdown=xp_breakdown,
+        questions_data=data.questions_data,
     )
     db.add(match)
 
-    # Update user stats
-    result = await db.execute(select(User).where(User.id == data.player_id))
-    user = result.scalar_one_or_none()
+    # ── Update user ──
     if user:
         user.matches_played += 1
-        won = data.player_score > data.opponent_score
 
-        # XP earned from match
-        xp_earned = data.player_score * 2
         if won:
-            xp_earned += 50  # Win bonus
             user.matches_won += 1
             user.current_streak += 1
             if user.current_streak > user.best_streak:
@@ -349,13 +425,29 @@ async def submit_match(data: MatchSubmit, db: AsyncSession = Depends(get_db)):
         else:
             user.current_streak = 0
 
-        # Update category XP
+        # All-Time XP
         xp_field = CATEGORY_XP_FIELD.get(data.category)
         if xp_field:
-            current = getattr(user, xp_field, 0)
-            setattr(user, xp_field, current + xp_earned)
-
+            setattr(user, xp_field, getattr(user, xp_field, 0) + total_xp)
         user.total_xp = user.xp_series_tv + user.xp_geographie + user.xp_histoire
+
+        # Seasonal XP
+        ensure_season(user)
+        seasonal_field = f"seasonal_{xp_field}" if xp_field else None
+        if seasonal_field:
+            setattr(user, seasonal_field, getattr(user, seasonal_field, 0) + total_xp)
+        user.seasonal_total_xp = (
+            user.seasonal_xp_series_tv + user.seasonal_xp_geographie + user.seasonal_xp_histoire
+        )
+
+        # MMR update (simplified Elo)
+        expected = 1.0 / (1.0 + 10 ** ((1000 - user.mmr) / 400))
+        k = 32
+        if won:
+            user.mmr += k * (1 - expected)
+        else:
+            user.mmr -= k * expected
+        user.mmr = max(100, min(3000, user.mmr))
 
     await db.commit()
     await db.refresh(match)
@@ -364,8 +456,9 @@ async def submit_match(data: MatchSubmit, db: AsyncSession = Depends(get_db)):
         id=match.id, player1_id=match.player1_id,
         player2_pseudo=match.player2_pseudo, player2_is_bot=match.player2_is_bot,
         category=match.category, player1_score=match.player1_score,
-        player2_score=match.player2_score, winner_id=match.winner_id,
-        created_at=match.created_at.isoformat()
+        player2_score=match.player2_score, player1_correct=match.player1_correct,
+        winner_id=match.winner_id, xp_earned=match.xp_earned,
+        xp_breakdown=match.xp_breakdown, created_at=match.created_at.isoformat(),
     )
 
 
@@ -374,31 +467,34 @@ async def submit_match(data: MatchSubmit, db: AsyncSession = Depends(get_db)):
 @api_router.get("/leaderboard")
 async def get_leaderboard(
     scope: str = "world",
+    view: str = "alltime",
     category: Optional[str] = None,
     limit: int = 50,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
-    query = select(User).order_by(User.total_xp.desc())
+    if view == "seasonal":
+        order_field = User.seasonal_total_xp
+    else:
+        order_field = User.total_xp
 
-    if scope == "city" and category:
-        # Would filter by city - for now return all
-        pass
-    elif scope == "region" and category:
-        pass
-    elif scope == "country" and category:
-        pass
-
-    query = query.limit(limit)
+    query = select(User).order_by(order_field.desc()).limit(limit)
     result = await db.execute(query)
     users = result.scalars().all()
 
     entries = []
     for i, u in enumerate(users):
-        entries.append(LeaderboardEntry(
-            pseudo=u.pseudo, avatar_seed=u.avatar_seed,
-            total_xp=u.total_xp, matches_won=u.matches_won,
-            rank=i + 1
-        ))
+        xp = u.seasonal_total_xp if view == "seasonal" else u.total_xp
+        entries.append({
+            "pseudo": u.pseudo,
+            "avatar_seed": u.avatar_seed,
+            "total_xp": xp,
+            "matches_won": u.matches_won,
+            "current_streak": u.current_streak,
+            "streak_badge": get_streak_badge(u.current_streak),
+            "level": get_level(u.total_xp),
+            "title": get_title(u.total_xp),
+            "rank": i + 1,
+        })
     return entries
 
 
@@ -417,22 +513,30 @@ async def get_profile(user_id: str, db: AsyncSession = Depends(get_db)):
     )
     matches = result.scalars().all()
 
+    level = get_level(user.total_xp)
+
     return {
         "user": {
             "id": user.id, "pseudo": user.pseudo, "avatar_seed": user.avatar_seed,
             "is_guest": user.is_guest, "total_xp": user.total_xp,
             "xp_series_tv": user.xp_series_tv, "xp_geographie": user.xp_geographie,
             "xp_histoire": user.xp_histoire,
-            "level": get_level(user.total_xp), "title": get_title(user.total_xp),
+            "seasonal_total_xp": user.seasonal_total_xp or 0,
+            "level": level, "title": get_title(user.total_xp),
             "matches_played": user.matches_played, "matches_won": user.matches_won,
             "best_streak": user.best_streak, "current_streak": user.current_streak,
+            "streak_badge": get_streak_badge(user.current_streak),
             "win_rate": round(user.matches_won / max(user.matches_played, 1) * 100),
+            "mmr": round(user.mmr or 1000),
         },
         "match_history": [
             {
                 "id": m.id, "category": m.category,
                 "player_score": m.player1_score, "opponent_score": m.player2_score,
                 "opponent": m.player2_pseudo, "won": m.winner_id == user_id,
+                "xp_earned": m.xp_earned or 0,
+                "xp_breakdown": m.xp_breakdown,
+                "correct_count": m.player1_correct or 0,
                 "created_at": m.created_at.isoformat()
             } for m in matches
         ]

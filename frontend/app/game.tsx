@@ -107,6 +107,8 @@ export default function GameScreen() {
   // Score refs to avoid stale closures
   const playerScoreRef = useRef(0);
   const botScoreRef = useRef(0);
+  const correctCountRef = useRef(0);
+  const opponentLevelRef = useRef(1);
   const [playerScore, setPlayerScore] = useState(0);
   const [botScore, setBotScore] = useState(0);
 
@@ -233,6 +235,8 @@ export default function GameScreen() {
       isCorrect ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error
     );
 
+    if (isCorrect) correctCountRef.current += 1;
+
     const { botPick, botPts } = resolveBotAnswer(question);
     handleAnswer(pPts, botPts, botPick);
   }, [selectedOption, showResult, currentIndex, questions, timeLeft]);
@@ -262,8 +266,10 @@ export default function GameScreen() {
     const userId = await AsyncStorage.getItem('duelo_user_id');
     const ps = playerScoreRef.current;
     const bs = botScoreRef.current;
+    const cc = correctCountRef.current;
+    const ol = parseInt(params.opponentLevel || '1') || 1;
     router.replace(
-      `/results?playerScore=${ps}&opponentScore=${bs}&opponentPseudo=${params.opponentPseudo}&category=${params.category}&userId=${userId}&isBot=${params.isBot}`
+      `/results?playerScore=${ps}&opponentScore=${bs}&opponentPseudo=${params.opponentPseudo}&category=${params.category}&userId=${userId}&isBot=${params.isBot}&correctCount=${cc}&opponentLevel=${ol}`
     );
   };
 
