@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, Animated, Dimensions,
-  Platform, LayoutAnimation, UIManager
+  Platform, UIManager
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -25,11 +25,68 @@ type Question = {
   correct_option: number;
 };
 
-const smoothAnim = LayoutAnimation.create(
-  400,
-  LayoutAnimation.Types.easeInEaseOut,
-  LayoutAnimation.Properties.scaleY,
-);
+// ── Animated Score Bar component ──
+function AnimatedBar({ score, showPending }: { score: number; showPending: boolean }) {
+  const [trackHeight, setTrackHeight] = useState(0);
+  const barHeightAnim = useRef(new Animated.Value(0)).current;
+  const pendingOpacity = useRef(new Animated.Value(1)).current;
+  const prevScore = useRef(0);
+
+  useEffect(() => {
+    if (trackHeight <= 0) return;
+
+    const targetH = (score / MAX_TOTAL) * trackHeight;
+
+    // Animate the bar growing smoothly
+    Animated.timing(barHeightAnim, {
+      toValue: targetH,
+      duration: 500,
+      useNativeDriver: false,
+    }).start();
+
+    prevScore.current = score;
+  }, [score, trackHeight]);
+
+  useEffect(() => {
+    // Fade pending in/out
+    Animated.timing(pendingOpacity, {
+      toValue: showPending ? 1 : 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  }, [showPending]);
+
+  const pendingHeight = trackHeight > 0 ? (MAX_PTS_PER_Q / MAX_TOTAL) * trackHeight : 0;
+
+  return (
+    <View style={styles.barColumn}>
+      <View
+        style={styles.barTrack}
+        onLayout={(e) => setTrackHeight(e.nativeEvent.layout.height)}
+      >
+        {/* Pending area — sits on top of earned */}
+        <Animated.View style={{
+          position: 'absolute',
+          left: 0, right: 0,
+          bottom: barHeightAnim,
+          height: pendingHeight,
+          backgroundColor: 'rgba(0,200,83,0.30)',
+          borderRadius: 7,
+          opacity: pendingOpacity,
+        }} />
+
+        {/* Earned (solid green, grows from bottom) */}
+        <Animated.View style={{
+          position: 'absolute',
+          left: 0, right: 0, bottom: 0,
+          height: barHeightAnim,
+          backgroundColor: '#00C853',
+          borderRadius: 7,
+        }} />
+      </View>
+    </View>
+  );
+}
 
 export default function GameScreen() {
   const router = useRouter();
@@ -45,22 +102,24 @@ export default function GameScreen() {
   const [timeLeft, setTimeLeft] = useState(TIMER_DURATION);
   const [loading, setLoading] = useState(true);
   const [pseudo, setPseudo] = useState('Joueur');
+  const [showPending, setShowPending] = useState(true);
 
-  // Scores tracked with refs to avoid stale closures
+  // Score refs to avoid stale closures
   const playerScoreRef = useRef(0);
   const botScoreRef = useRef(0);
-  const [playerScoreDisplay, setPlayerScoreDisplay] = useState(0);
-  const [botScoreDisplay, setBotScoreDisplay] = useState(0);
+  const [playerScore, setPlayerScore] = useState(0);
+  const [botScore, setBotScore] = useState(0);
 
-  // Bar percentages (0-100) — state-driven with LayoutAnimation
-  const [playerBarPct, setPlayerBarPct] = useState(0);
-  const [botBarPct, setBotBarPct] = useState(0);
-  const [playerPendingPct, setPlayerPendingPct] = useState((MAX_PTS_PER_Q / MAX_TOTAL) * 100);
-  const [botPendingPct, setBotPendingPct] = useState((MAX_PTS_PER_Q / MAX_TOTAL) * 100);
+  // Progress bar state (questions)
+  const [completedQuestions, setCompletedQuestions] = useState(0);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const progressAnim = useRef(new Animated.Value(1)).current;
+  const timerAnim = useRef(new Animated.Value(1)).current;
   const questionFade = useRef(new Animated.Value(0)).current;
+
+  // Progress bar animation
+  const progressAnim = useRef(new Animated.Value(0)).current;
+  const progressPendingOpacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     loadPseudo();
@@ -93,8 +152,8 @@ export default function GameScreen() {
 
   const startTimer = () => {
     setTimeLeft(TIMER_DURATION);
-    progressAnim.setValue(1);
-    Animated.timing(progressAnim, {
+    timerAnim.setValue(1);
+    Animated.timing(timerAnim, {
       toValue: 0, duration: TIMER_DURATION * 1000, useNativeDriver: false,
     }).start();
 
@@ -121,32 +180,41 @@ export default function GameScreen() {
     return { botPick: wrongOpts[Math.floor(Math.random() * wrongOpts.length)], botPts: 0 };
   };
 
-  const updateBars = (pPts: number, bPts: number) => {
+  const handleAnswer = (pPts: number, bPts: number, botPick: number) => {
     const newP = playerScoreRef.current + pPts;
     const newB = botScoreRef.current + bPts;
     playerScoreRef.current = newP;
     botScoreRef.current = newB;
+    setPlayerScore(newP);
+    setBotScore(newB);
+    setBotAnswer(botPick);
 
-    setPlayerScoreDisplay(newP);
-    setBotScoreDisplay(newB);
+    // Hide pending on bars (answered)
+    setShowPending(false);
 
-    // Animate bars with LayoutAnimation
-    LayoutAnimation.configureNext(smoothAnim);
-    setPlayerBarPct((newP / MAX_TOTAL) * 100);
-    setBotBarPct((newB / MAX_TOTAL) * 100);
-    setPlayerPendingPct(0);
-    setBotPendingPct(0);
+    // Animate progress bar: question completed
+    const done = completedQuestions + 1;
+    setCompletedQuestions(done);
+    Animated.timing(progressAnim, {
+      toValue: done / TOTAL_QUESTIONS,
+      duration: 400,
+      useNativeDriver: false,
+    }).start();
+
+    // Fade out progress pending
+    Animated.timing(progressPendingOpacity, {
+      toValue: 0, duration: 300, useNativeDriver: false,
+    }).start();
+
+    setTimeout(nextQuestion, 2000);
   };
 
   const handleTimeout = () => {
     setShowResult(true);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-
     const question = questions[currentIndex];
     const { botPick, botPts } = resolveBotAnswer(question);
-    setBotAnswer(botPick);
-    updateBars(0, botPts);
-    setTimeout(nextQuestion, 2000);
+    handleAnswer(0, botPts, botPick);
   };
 
   const selectAnswer = useCallback((optionIndex: number) => {
@@ -166,9 +234,7 @@ export default function GameScreen() {
     );
 
     const { botPick, botPts } = resolveBotAnswer(question);
-    setBotAnswer(botPick);
-    updateBars(pPts, botPts);
-    setTimeout(nextQuestion, 2000);
+    handleAnswer(pPts, botPts, botPick);
   }, [selectedOption, showResult, currentIndex, questions, timeLeft]);
 
   const nextQuestion = () => {
@@ -180,11 +246,12 @@ export default function GameScreen() {
     setSelectedOption(null);
     setBotAnswer(null);
     setShowResult(false);
+    setShowPending(true);
 
-    // Reset pending for next question
-    LayoutAnimation.configureNext(smoothAnim);
-    setPlayerPendingPct((MAX_PTS_PER_Q / MAX_TOTAL) * 100);
-    setBotPendingPct((MAX_PTS_PER_Q / MAX_TOTAL) * 100);
+    // Show progress pending for new question
+    Animated.timing(progressPendingOpacity, {
+      toValue: 1, duration: 200, useNativeDriver: false,
+    }).start();
 
     animateQuestion();
     startTimer();
@@ -226,14 +293,28 @@ export default function GameScreen() {
     return '#999';
   };
 
+  const oneQPct = (1 / TOTAL_QUESTIONS) * 100; // ~14.3%
+
   return (
     <View style={styles.container}>
-      {/* ── Progress Bar (Violet) ── */}
+      {/* ── Progress Bar (Question advancement, not timer) ── */}
       <View style={styles.progressBarBg}>
-        <Animated.View style={[styles.progressBarFill, {
-          width: progressAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }),
+        {/* Solid completed portion */}
+        <Animated.View style={[styles.progressBarSolid, {
+          width: progressAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['0%', '100%'],
+          }),
         }]} />
-        <View style={[styles.progressBarDone, { width: `${(currentIndex / questions.length) * 100}%` }]} />
+        {/* Pending portion for current question */}
+        <Animated.View style={[styles.progressBarPending, {
+          width: `${oneQPct}%`,
+          left: progressAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['0%', '100%'],
+          }),
+          opacity: progressPendingOpacity,
+        }]} />
       </View>
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -246,7 +327,7 @@ export default function GameScreen() {
             <View style={styles.playerMeta}>
               <Text style={styles.playerName} numberOfLines={1}>{pseudo}</Text>
               <Text style={styles.playerTitle}>Challenger</Text>
-              <Text style={styles.playerScoreNum}>{playerScoreDisplay}</Text>
+              <Text style={styles.playerScoreNum}>{playerScore}</Text>
             </View>
           </View>
 
@@ -263,7 +344,7 @@ export default function GameScreen() {
                 {params.opponentPseudo?.slice(0, 10)}
               </Text>
               <Text style={[styles.playerTitle, { textAlign: 'right' }]}>Bot</Text>
-              <Text style={[styles.playerScoreNum, { textAlign: 'right' }]}>{botScoreDisplay}</Text>
+              <Text style={[styles.playerScoreNum, { textAlign: 'right' }]}>{botScore}</Text>
             </View>
             <View style={[styles.avatarCircle, styles.avatarBot]}>
               <Text style={styles.avatarLetter}>{(params.opponentPseudo || 'B')[0]?.toUpperCase()}</Text>
@@ -275,18 +356,8 @@ export default function GameScreen() {
 
         {/* ── Main Area ── */}
         <View style={styles.gameArea}>
-
           {/* LEFT BAR (Player) */}
-          <View style={styles.barColumn}>
-            <View style={styles.barTrack}>
-              {/* Empty space at top */}
-              <View style={{ flex: 100 - playerBarPct - playerPendingPct }} />
-              {/* Pending (lighter green/gray) */}
-              <View style={[styles.barPending, { flex: Math.max(playerPendingPct, 0) }]} />
-              {/* Earned (solid green) */}
-              <View style={[styles.barEarned, { flex: Math.max(playerBarPct, 0), backgroundColor: '#00C853' }]} />
-            </View>
-          </View>
+          <AnimatedBar score={playerScore} showPending={showPending} />
 
           {/* CENTER CONTENT */}
           <View style={styles.centerContent}>
@@ -308,7 +379,6 @@ export default function GameScreen() {
                     disabled={showResult}
                     activeOpacity={0.85}
                   >
-                    {/* LEFT triangle (player) — base flush right edge of triangle = left edge of card */}
                     {showResult && isPlayerPick && (
                       <View style={styles.triLeftAnchor}>
                         <View style={styles.triLeft} />
@@ -319,7 +389,6 @@ export default function GameScreen() {
                       {option}
                     </Text>
 
-                    {/* RIGHT triangle (bot) — base flush left edge of triangle = right edge of card */}
                     {showResult && isBotPick && (
                       <View style={styles.triRightAnchor}>
                         <View style={styles.triRight} />
@@ -332,14 +401,7 @@ export default function GameScreen() {
           </View>
 
           {/* RIGHT BAR (Bot) */}
-          <View style={styles.barColumn}>
-            <View style={styles.barTrack}>
-              <View style={{ flex: 100 - botBarPct - botPendingPct }} />
-              <View style={[styles.barPending, { flex: Math.max(botPendingPct, 0) }]} />
-              <View style={[styles.barEarned, { flex: Math.max(botBarPct, 0), backgroundColor: '#00C853' }]} />
-            </View>
-          </View>
-
+          <AnimatedBar score={botScore} showPending={showPending} />
         </View>
       </SafeAreaView>
     </View>
@@ -352,10 +414,17 @@ const styles = StyleSheet.create({
   loadingView: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { color: '#FFF', fontSize: 16 },
 
-  // Progress
-  progressBarBg: { height: 5, backgroundColor: '#333', width: '100%' },
-  progressBarFill: { position: 'absolute', height: 5, backgroundColor: '#8A2BE2' },
-  progressBarDone: { position: 'absolute', height: 5, backgroundColor: '#6B21A8' },
+  // Progress bar (question advancement)
+  progressBarBg: { height: 6, backgroundColor: '#333', width: '100%', borderRadius: 3, overflow: 'hidden' },
+  progressBarSolid: {
+    position: 'absolute', height: 6, backgroundColor: '#8A2BE2',
+    borderRadius: 3,
+  },
+  progressBarPending: {
+    position: 'absolute', height: 6,
+    backgroundColor: 'rgba(138,43,226,0.35)',
+    borderRadius: 3,
+  },
 
   // Header
   headerRow: {
@@ -394,14 +463,12 @@ const styles = StyleSheet.create({
   // Game area
   gameArea: { flex: 1, flexDirection: 'row' },
 
-  // Score Bars — flex-based for reliable height
+  // Score bars
   barColumn: { width: 18, paddingVertical: 12, alignItems: 'center' },
   barTrack: {
-    width: 14, flex: 1, backgroundColor: '#2A2A2A', borderRadius: 7,
-    overflow: 'hidden', flexDirection: 'column',
+    width: 14, flex: 1, backgroundColor: '#2A2A2A',
+    borderRadius: 7, overflow: 'hidden', position: 'relative',
   },
-  barPending: { backgroundColor: 'rgba(0,200,83,0.30)', minHeight: 0 },
-  barEarned: { minHeight: 0, borderRadius: 0 },
 
   // Center
   centerContent: { flex: 1, paddingHorizontal: 4 },
@@ -426,16 +493,10 @@ const styles = StyleSheet.create({
   },
   optionText: { fontSize: 17, fontWeight: '800', textAlign: 'center', color: '#1A1A1A' },
 
-  // Triangles — base flush with card edge, point toward screen center
-  // Left anchor: stretches full height of card, centered vertically
+  // Triangles
   triLeftAnchor: {
-    position: 'absolute',
-    left: -16,
-    top: 0,
-    bottom: 0,
-    width: 16,
-    justifyContent: 'center',
-    alignItems: 'flex-end', // push triangle so its right edge (base) touches card left
+    position: 'absolute', left: -16, top: 0, bottom: 0,
+    width: 16, justifyContent: 'center', alignItems: 'flex-end',
   },
   triLeft: {
     width: 0, height: 0,
@@ -443,15 +504,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 14, borderBottomColor: 'transparent',
     borderLeftWidth: 16, borderLeftColor: '#111',
   },
-  // Right anchor: stretches full height of card, centered vertically
   triRightAnchor: {
-    position: 'absolute',
-    right: -16,
-    top: 0,
-    bottom: 0,
-    width: 16,
-    justifyContent: 'center',
-    alignItems: 'flex-start', // push triangle so its left edge (base) touches card right
+    position: 'absolute', right: -16, top: 0, bottom: 0,
+    width: 16, justifyContent: 'center', alignItems: 'flex-start',
   },
   triRight: {
     width: 0, height: 0,
