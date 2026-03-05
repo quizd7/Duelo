@@ -1,0 +1,173 @@
+{
+  "design_system": {
+    "identity": {
+      "name": "Duelo",
+      "aesthetic": "Dark Mode Premium",
+      "inspiration": "QuizUp (2014) meets Cyberpunk 2077",
+      "core_values": [
+        "Competition",
+        "Speed",
+        "Immersion",
+        "Prestige"
+      ]
+    },
+    "typography": {
+      "font_family": {
+        "headings": "Barlow Condensed",
+        "body": "Outfit",
+        "mono": "Space Mono"
+      },
+      "scale": {
+        "hero": "text-6xl font-black tracking-tighter uppercase",
+        "h1": "text-4xl font-bold tracking-tight",
+        "h2": "text-3xl font-bold tracking-tight",
+        "h3": "text-2xl font-semibold tracking-normal",
+        "body_lg": "text-lg font-medium leading-relaxed",
+        "body": "text-base font-normal leading-relaxed",
+        "caption": "text-sm font-medium text-muted-foreground uppercase tracking-widest"
+      },
+      "implementation_note": "Use 'expo-font' to load these Google Fonts. If unavailable, fallback to 'System' (San Francisco/Roboto) with increased weight."
+    },
+    "colors": {
+      "palette": {
+        "background": {
+          "default": "#000000",
+          "subtle": "#050505",
+          "card": "#0A0A0A",
+          "overlay": "rgba(0, 0, 0, 0.8)"
+        },
+        "primary": {
+          "DEFAULT": "#8A2BE2",
+          "glow": "#A020F0",
+          "dim": "#4B0082"
+        },
+        "secondary": {
+          "DEFAULT": "#00FFFF",
+          "glow": "#E0FFFF",
+          "dim": "#008B8B"
+        },
+        "text": {
+          "primary": "#FFFFFF",
+          "secondary": "#A3A3A3",
+          "muted": "#525252",
+          "inverse": "#000000"
+        },
+        "status": {
+          "success": "#00FF9D",
+          "warning": "#FFD700",
+          "error": "#FF3B30",
+          "info": "#00BFFF"
+        }
+      },
+      "semantic": {
+        "win": "text-[#00FF9D] drop-shadow-[0_0_10px_rgba(0,255,157,0.5)]",
+        "loss": "text-[#FF3B30] drop-shadow-[0_0_10px_rgba(255,59,48,0.5)]",
+        "rank_gold": "text-[#FFD700] drop-shadow-[0_0_10px_rgba(255,215,0,0.5)]",
+        "rank_silver": "text-[#C0C0C0] drop-shadow-[0_0_8px_rgba(192,192,192,0.5)]",
+        "rank_bronze": "text-[#CD7F32] drop-shadow-[0_0_6px_rgba(205,127,50,0.5)]"
+      }
+    },
+    "components": {
+      "glass_card": {
+        "style": "bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl",
+        "interaction": "active:scale-95 active:bg-white/10 transition-all duration-200"
+      },
+      "neon_button": {
+        "primary": "bg-[#8A2BE2] shadow-[0_0_20px_rgba(138,43,226,0.5)] border border-violet-400/30 rounded-full py-4 px-8",
+        "secondary": "bg-transparent border border-[#00FFFF] text-[#00FFFF] shadow-[0_0_10px_rgba(0,255,255,0.2)] rounded-full py-4 px-8",
+        "text_style": "text-white font-bold tracking-wider uppercase text-center"
+      },
+      "input_field": {
+        "style": "bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-white/30 focus:border-[#8A2BE2] focus:shadow-[0_0_15px_rgba(138,43,226,0.3)] transition-all"
+      },
+      "quiz_option": {
+        "default": "bg-white/5 border border-white/10 rounded-xl p-6 mb-4 flex-row items-center justify-between",
+        "selected": "bg-[#8A2BE2]/20 border-[#8A2BE2] shadow-[0_0_15px_rgba(138,43,226,0.3)]",
+        "correct": "bg-[#00FF9D]/20 border-[#00FF9D] shadow-[0_0_15px_rgba(0,255,157,0.3)]",
+        "wrong": "bg-[#FF3B30]/20 border-[#FF3B30] shadow-[0_0_15px_rgba(255,59,48,0.3)]"
+      }
+    },
+    "layout": {
+      "spacing": {
+        "container": "px-6 py-8",
+        "section": "gap-8",
+        "item": "gap-4"
+      },
+      "grid_strategy": {
+        "dashboard": "flex-1 flex-row flex-wrap justify-between gap-4",
+        "list": "flex-1 w-full gap-3"
+      }
+    },
+    "motion": {
+      "transitions": {
+        "page": "slide_from_right",
+        "modal": "fade_scale",
+        "duration": "400ms",
+        "easing": "cubic-bezier(0.25, 0.1, 0.25, 1.0)"
+      },
+      "haptics": {
+        "success": "notification.success",
+        "error": "notification.error",
+        "selection": "selection"
+      }
+    },
+    "assets": {
+      "images": {
+        "background_abstract_blue": "https://images.unsplash.com/photo-1758117169154-ba6ffd8f51ad?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODR8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGRhcmslMjBuZW9uJTIwdmlvbGV0JTIwYW5kJTIwY3lhbiUyMDNkJTIwc2hhcGVzfGVufDB8fHx8MTc3MjczNDE3MHww&ixlib=rb-4.1.0&q=85",
+        "background_foil_purple": "https://images.unsplash.com/photo-1550729154-e3abdffadd93?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODR8MHwxfHNlYXJjaHwyfHxhYnN0cmFjdCUyMGRhcmslMjBuZW9uJTIwdmlvbGV0JTIwYW5kJTIwY3lhbiUyMDNkJTIwc2hhcGVzfGVufDB8fHx8MTc3MjczNDE3MHww&ixlib=rb-4.1.0&q=85",
+        "background_shiny_objects": "https://images.unsplash.com/photo-1656169907289-b225ff3d7aa4?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODR8MHwxfHNlYXJjaHwzfHxhYnN0cmFjdCUyMGRhcmslMjBuZW9uJTIwdmlvbGV0JTIwYW5kJTIwY3lhbiUyMDNkJTIwc2hhcGVzfGVufDB8fHx8MTc3MjczNDE3MHww&ixlib=rb-4.1.0&q=85",
+        "background_purple_reflections": "https://images.unsplash.com/photo-1754738381739-5efb94a4525b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODR8MHwxfHNlYXJjaHw0fHxhYnN0cmFjdCUyMGRhcmslMjBuZW9uJTIwdmlvbGV0JTIwYW5kJTIwY3lhbiUyMDNkJTIwc2hhcGVzfGVufDB8fHx8MTc3MjczNDE3MHww&ixlib=rb-4.1.0&q=85"
+      },
+      "icons": {
+        "library": "lucide-react-native",
+        "style": "stroke-width=1.5 color=white size=24"
+      }
+    }
+  },
+  "implementation_guide": {
+    "tech_stack": {
+      "framework": "React Native Expo",
+      "styling": "NativeWind (Tailwind CSS for Native)",
+      "navigation": "Expo Router",
+      "icons": "Lucide React Native",
+      "animations": "React Native Reanimated",
+      "gestures": "React Native Gesture Handler",
+      "blur": "Expo Blur"
+    },
+    "setup_instructions": [
+      "Install NativeWind: yarn add nativewind tailwindcss react-native-reanimated react-native-safe-area-context",
+      "Init Tailwind: npx tailwindcss init",
+      "Configure tailwind.config.js: content: ['./app/**/*.{js,jsx,ts,tsx}', './components/**/*.{js,jsx,ts,tsx}']",
+      "Add babel plugin: plugins: ['nativewind/babel'] in babel.config.js",
+      "Install Lucide: yarn add lucide-react-native",
+      "Install Haptics: npx expo install expo-haptics"
+    ],
+    "file_structure": {
+      "app": {
+        "_layout.js": "Root layout with Stack/Tabs provider and Global Context",
+        "index.js": "Landing page / Auth check",
+        "(auth)": "Group for login/register screens",
+        "(tabs)": "Group for main app tabs (Home, Leaderboard, Profile)",
+        "game/[id].js": "Dynamic route for Quiz Game",
+        "matchmaking.js": "Radar screen",
+        "admin-dashboard.js": "Admin panel"
+      },
+      "components": {
+        "ui": "Reusable atoms (Button, Input, Card)",
+        "game": "Game specific (Timer, QuestionCard, AnswerButton)",
+        "shared": "Layout wrappers (ScreenWrapper, GradientBackground)"
+      }
+    }
+  },
+  "universal_guidelines": [
+    "NEVER use generic 'System' blue/blue-500. Use Brand Violet (#8A2BE2) or Cyan (#00FFFF).",
+    "ALWAYS use 'SafeAreaView' or 'safe-area-context' padding to avoid notch overlap.",
+    "ALWAYS wrap text in <Text> components. Raw strings crash React Native.",
+    "Use 'TouchableOpacity' or 'Pressable' for interactions. Do not use 'button' tag.",
+    "Glassmorphism requires absolute positioning of the blur layer or using <BlurView> from expo-blur.",
+    "Animations must run on UI thread (use 'useSharedValue', 'useAnimatedStyle' from Reanimated).",
+    "Images must have 'width' and 'height' or 'flex: 1' to be visible.",
+    "Avoid gradients on text (complex in RN). Use solid white or high-contrast colors.",
+    "Haptic feedback is MANDATORY on all button presses (use 'Haptics.impactAsync')."
+  ]
+}
