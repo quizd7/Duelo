@@ -283,8 +283,111 @@ metadata:
   test_sequence: 3
   run_ui: false
 
+  - task: "Category Detail API"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "GET /api/category/{id}/detail?user_id=X returns name, description, total_questions, followers_count, user_level, user_title, user_xp, xp_progress, is_following, completion_pct. Validated via curl."
+        - working: true
+          agent: "testing"
+          comment: "Comprehensive testing complete. Tested all 3 categories (series_tv, geographie, histoire) with user-specific data. All required fields present: id, name, description, total_questions, followers_count, user_level, user_title, user_xp, xp_progress (current/needed/progress), is_following, completion_pct. User-specific data correctly returned for each category with proper level calculation and titles."
+
+  - task: "Follow/Unfollow Category API"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "POST /api/category/{id}/follow with {user_id} toggles follow. Returns {following: true/false}. Validated via curl."
+        - working: true
+          agent: "testing"
+          comment: "Follow toggle functionality fully tested. Toggle works correctly: follow/unfollow operations return proper {following: true/false} response. Followers count updates correctly in category detail API after follow/unfollow actions. Tested complete flow: initial state → follow → verify count increase → unfollow → verify count decrease."
+
+  - task: "Category Leaderboard API"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "GET /api/category/{id}/leaderboard returns top 20 users sorted by category XP. Returns rank, pseudo, avatar_seed, level, title, xp. Validated via curl."
+        - working: true
+          agent: "testing"
+          comment: "Leaderboard API working correctly. Returns properly formatted list with all required fields: rank, pseudo, avatar_seed, level, title, xp. Rank ordering is correct (1, 2, 3, etc.). Tested with 9 existing entries, all entries have proper structure and category-specific level/title data."
+
+  - task: "Wall Posts API (Create + Get)"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "POST /api/category/{id}/wall creates post. GET /api/category/{id}/wall returns posts with likes_count, comments_count, is_liked. Validated via curl."
+        - working: true
+          agent: "testing"
+          comment: "Wall posts API fully functional. POST creates posts with proper response structure including id, user object (id/pseudo/avatar_seed), content, likes_count, comments_count, is_liked, created_at. GET returns list of posts with all required fields and user-specific is_liked flag. Created test post successfully retrieved in wall feed."
+
+  - task: "Like Toggle API"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "POST /api/wall/{post_id}/like toggles like. Returns {liked: true/false}. Validated via curl."
+        - working: true
+          agent: "testing"
+          comment: "Like toggle API working perfectly. Toggle functionality confirmed: like → {liked: true}, unlike → {liked: false}. Likes count updates correctly in wall posts API. is_liked flag properly reflects user's like status in wall feed. Full like/unlike cycle tested successfully."
+
+  - task: "Comments API (Create + Get)"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "POST /api/wall/{post_id}/comment creates comment. GET /api/wall/{post_id}/comments returns all comments. Validated via curl."
+        - working: true
+          agent: "testing"
+          comment: "Comments API fully working. POST creates comments with proper response: id, user object, content, created_at. GET returns list of comments with correct structure. User object includes id, pseudo, avatar_seed. Comments appear in chronological order. Test comment successfully created and retrieved."
+
+  - task: "Category Detail Frontend Page"
+    implemented: true
+    working: "NA"
+    file: "frontend/app/category-detail.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "New page with header, follow/play/leaderboard buttons, progress bar, stats, social wall with posts/likes/comments. Needs frontend testing."
+
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Category Detail Frontend Page"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -294,3 +397,7 @@ agent_communication:
       message: "Major update: Implemented per-category level system. New XP formula: 500 + (N-1)^2 * 10, max level 50. Category titles at levels 1, 10, 20, 35, 50 per category. Smart matchmaking returns bot with similar category level. Match submit detects new title unlocks. Profile returns per-category data. New select-title endpoint. Leaderboard tab removed from frontend. Please test: 1) POST /api/game/matchmaking with body {category, player_id} 2) POST /api/game/submit - check new_title and new_level in response 3) GET /api/profile/{user_id} - check categories data 4) POST /api/user/select-title with body {user_id, title} 5) Level calculation formula correctness."
     - agent: "testing"
       message: "✅ Backend testing complete - All 5 priority tasks PASSED. Comprehensive testing performed: 1) Smart matchmaking working correctly with category+player_id, returns both player and opponent with proper level matching (+/-5). 2) Per-category level system validated with XP formula 500+(N-1)^2*10, max level 50. 3) Profile API returns complete category data structure with xp, level, title, xp_progress, unlocked_titles for all 3 categories plus all_unlocked_titles array. 4) Match submit correctly detects title unlocks and returns new_title/new_level. 5) Title selection validates unlocked status and updates selected_title. Full flow test passed: register user → matchmaking → submit match → check profile → select title. All APIs working as specified in review request. Backend is ready for frontend integration."
+    - agent: "main"
+      message: "New social wall feature complete. All backend APIs for the social wall have been validated via curl: category detail, follow/unfollow, leaderboard, create/get wall posts, like toggle, create/get comments. All working correctly. Please test the NEW social wall backend APIs comprehensively and test the full frontend flow. Frontend page is at /category-detail?id=series_tv. User registration is guest-based (pseudo only). Key endpoints to test: 1) GET /api/category/{id}/detail?user_id=X 2) POST /api/category/{id}/follow {user_id} 3) GET /api/category/{id}/leaderboard 4) GET /api/category/{id}/wall?user_id=X 5) POST /api/category/{id}/wall {user_id, content, image_base64?} 6) POST /api/wall/{post_id}/like {user_id} 7) POST /api/wall/{post_id}/comment {user_id, content} 8) GET /api/wall/{post_id}/comments. Previous test report at /app/test_reports/iteration_1.json covers earlier features (matchmaking, XP system, profile, title selection) - DO NOT retest those."
+    - agent: "testing" 
+      message: "✅ SOCIAL WALL BACKEND TESTING COMPLETE - ALL 6 APIs FULLY FUNCTIONAL. Comprehensive testing performed following exact review request flow: 1) Guest registration working with proper pseudo validation. 2) Category detail API tested for all 3 categories (series_tv, geographie, histoire) - returns complete user-specific data including level, title, XP, follow status, completion %. 3) Follow/unfollow toggle working perfectly - properly updates followers count and follow status. 4) Category leaderboard returns top users with correct rank, pseudo, avatar_seed, level, title, XP data. 5) Wall posts creation/retrieval fully functional - posts created with proper user data, likes_count, comments_count, is_liked flag. 6) Like toggle working correctly - toggles like/unlike state and updates counts. 7) Comments creation/retrieval working - proper user objects, content validation. 8) Invalid cases properly handled - empty content rejected with 400, invalid categories rejected. Complete test flow executed: register → get category detail → follow category → create post → like post → unlike → comment → get comments → get wall posts → get leaderboard → unfollow → test invalid cases. All social wall backend APIs ready for production use."

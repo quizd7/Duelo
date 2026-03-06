@@ -248,7 +248,7 @@ export default function CategoryDetailScreen() {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={meta.color} />}
         >
           {/* Back button */}
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <TouchableOpacity data-testid="back-button" style={styles.backBtn} onPress={() => router.back()}>
             <Text style={styles.backBtnText}>← Retour</Text>
           </TouchableOpacity>
 
@@ -266,11 +266,12 @@ export default function CategoryDetailScreen() {
 
             {/* Action Buttons Row */}
             <View style={styles.actionsRow}>
-              <TouchableOpacity style={[styles.actionBtn, styles.playBtn]} onPress={handlePlay} activeOpacity={0.8}>
+              <TouchableOpacity data-testid="play-button" style={[styles.actionBtn, styles.playBtn]} onPress={handlePlay} activeOpacity={0.8}>
                 <Text style={styles.playBtnIcon}>⚡</Text>
                 <Text style={styles.playBtnText}>Jouer</Text>
               </TouchableOpacity>
               <TouchableOpacity
+                data-testid="follow-button"
                 style={[styles.actionBtn, detail.is_following ? styles.followingBtn : styles.followBtn]}
                 onPress={handleFollow} activeOpacity={0.8} disabled={followLoading}
               >
@@ -279,7 +280,7 @@ export default function CategoryDetailScreen() {
                   {detail.is_following ? 'Suivi' : 'Suivre'}
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.actionBtn, styles.leaderBtn]} onPress={handleLeaderboard} activeOpacity={0.8}>
+              <TouchableOpacity data-testid="leaderboard-button" style={[styles.actionBtn, styles.leaderBtn]} onPress={handleLeaderboard} activeOpacity={0.8}>
                 <Text style={styles.leaderIcon}>🏆</Text>
                 <Text style={styles.leaderText}>Classement</Text>
               </TouchableOpacity>
@@ -318,6 +319,7 @@ export default function CategoryDetailScreen() {
           <View style={styles.wallHeader}>
             <Text style={styles.wallTitle}>MUR DE LA COMMUNAUTÉ</Text>
             <TouchableOpacity
+              data-testid="create-post-button"
               style={[styles.createPostBtn, { backgroundColor: meta.color + '20', borderColor: meta.color + '40' }]}
               onPress={() => setShowCreatePost(true)}
             >
@@ -334,7 +336,7 @@ export default function CategoryDetailScreen() {
             </View>
           ) : (
             posts.map(post => (
-              <View key={post.id} style={styles.postCard}>
+              <View key={post.id} data-testid={`post-card-${post.id}`} style={styles.postCard}>
                 {/* Post Header */}
                 <View style={styles.postHeader}>
                   <View style={styles.postAvatar}>
