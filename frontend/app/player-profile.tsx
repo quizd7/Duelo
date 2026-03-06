@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView, Image,
-  ActivityIndicator, RefreshControl, FlatList, Dimensions
+  ActivityIndicator, RefreshControl, Dimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -11,10 +11,10 @@ import * as Haptics from 'expo-haptics';
 const { width } = Dimensions.get('window');
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
-const CATEGORY_META: Record<string, { icon: string; color: string; name: string }> = {
-  series_tv: { icon: '📺', color: '#E040FB', name: 'Séries TV' },
-  geographie: { icon: '🌍', color: '#00FFFF', name: 'Géographie' },
-  histoire: { icon: '🏛️', color: '#FFD700', name: 'Histoire' },
+const CATEGORY_META: Record<string, { icon: string; color: string; name: string; bg: string }> = {
+  series_tv: { icon: '📺', color: '#E040FB', name: 'Séries TV', bg: '#2D1B4E' },
+  geographie: { icon: '🌍', color: '#00FFFF', name: 'Géographie', bg: '#0D2B2B' },
+  histoire: { icon: '🏛️', color: '#FFD700', name: 'Histoire', bg: '#2B2510' },
 };
 
 type PlayerProfile = {
@@ -85,7 +85,6 @@ export default function PlayerProfileScreen() {
 
   const handlePlay = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    // Find best category of this player
     if (profile?.categories) {
       const cats = Object.entries(profile.categories);
       const best = cats.reduce((a, b) => b[1].xp > a[1].xp ? b : a, cats[0]);
@@ -116,6 +115,10 @@ export default function PlayerProfileScreen() {
 
   const isOwnProfile = myId === profile.id;
 
+  // Sort categories by level descending
+  const sortedCategories = Object.entries(profile.categories)
+    .sort((a, b) => b[1].level - a[1].level || b[1].xp - a[1].xp);
+
   return (
     <SafeAreaView style={s.container}>
       <ScrollView
@@ -125,37 +128,28 @@ export default function PlayerProfileScreen() {
       >
         {/* Back */}
         <TouchableOpacity data-testid="back-button" style={s.backBtn} onPress={() => router.back()}>
-          <Text style={s.backText}>← Retour</Text>
+          <Text style={s.backText}>{'← Retour'}</Text>
         </TouchableOpacity>
 
-        {/* Profile Header */}
-        <View style={s.headerCard}>
+        {/* ── Hero Header ── */}
+        <View style={s.heroCard}>
+          <View style={s.heroBg} />
+
           {/* Avatar */}
-          <View style={s.avatarSection}>
-            <View style={s.avatarRing}>
-              <View style={s.avatar}>
-                <Text style={s.avatarText}>{profile.pseudo[0]?.toUpperCase()}</Text>
-              </View>
-            </View>
-            {/* Category badges around avatar */}
-            <View style={s.badgesRow}>
-              {Object.entries(profile.categories).map(([key, cat]) => (
-                cat.xp > 0 ? (
-                  <View key={key} style={[s.catBadge, { backgroundColor: CATEGORY_META[key]?.color + '30', borderColor: CATEGORY_META[key]?.color + '60' }]}>
-                    <Text style={s.catBadgeIcon}>{CATEGORY_META[key]?.icon}</Text>
-                    <Text style={[s.catBadgeLevel, { color: CATEGORY_META[key]?.color }]}>Niv.{cat.level}</Text>
-                  </View>
-                ) : null
-              ))}
+          <View style={s.avatarRing}>
+            <View style={s.avatar}>
+              <Text style={s.avatarText}>{profile.pseudo[0]?.toUpperCase()}</Text>
             </View>
           </View>
 
-          {/* Name & Info */}
+          {/* Name & Title */}
           <Text style={s.pseudo} data-testid="player-pseudo">{profile.pseudo}</Text>
           <Text style={s.title}>{profile.selected_title}</Text>
-          <View style={s.countryRow}>
-            <Text style={s.countryFlag}>{profile.country_flag}</Text>
-            <Text style={s.countryText}>{profile.country || 'Monde'}</Text>
+
+          {/* Location */}
+          <View style={s.locationRow}>
+            <Text style={s.locationFlag}>{profile.country_flag}</Text>
+            <Text style={s.locationText}>{profile.country || 'Monde'}</Text>
           </View>
 
           {/* Champion Titles */}
@@ -163,8 +157,11 @@ export default function PlayerProfileScreen() {
             <View style={s.championSection}>
               {profile.champion_titles.map((ct, i) => (
                 <View key={i} style={s.championBanner}>
-                  <Text style={s.championText}>🏆 #1 en {ct.category_name}</Text>
-                  <Text style={s.championSub}>En {ct.scope}, {ct.date}</Text>
+                  <Text style={s.championIcon}>{'🏆'}</Text>
+                  <View>
+                    <Text style={s.championText}>#1 en {ct.category_name}</Text>
+                    <Text style={s.championSub}>{ct.scope} - {ct.date}</Text>
+                  </View>
                 </View>
               ))}
             </View>
@@ -174,7 +171,7 @@ export default function PlayerProfileScreen() {
           {!isOwnProfile && (
             <View style={s.actionsRow}>
               <TouchableOpacity data-testid="play-button" style={s.actionBtn} onPress={handlePlay}>
-                <Text style={s.actionIcon}>⚡</Text>
+                <Text style={s.actionIcon}>{'⚡'}</Text>
                 <Text style={s.actionText}>Jouer</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -188,48 +185,65 @@ export default function PlayerProfileScreen() {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity data-testid="chat-button" style={[s.actionBtn, s.chatBtn]} onPress={handleChat}>
-                <Text style={s.actionIcon}>💬</Text>
+                <Text style={s.actionIcon}>{'💬'}</Text>
                 <Text style={[s.actionText, { color: '#00BFFF' }]}>Message</Text>
               </TouchableOpacity>
             </View>
           )}
 
-          {/* Stats Row */}
+          {/* ── Stats Row ── */}
           <View style={s.statsRow}>
             <View style={s.statItem}>
-              <Text style={s.statValue}>{profile.matches_played}</Text>
+              <Text style={s.statValue} data-testid="stat-games">{profile.matches_played}</Text>
               <Text style={s.statLabel}>PARTIES</Text>
             </View>
             <View style={s.statDivider} />
             <View style={s.statItem}>
-              <Text style={s.statValue}>{profile.followers_count}</Text>
+              <Text style={s.statValue} data-testid="stat-followers">{profile.followers_count}</Text>
               <Text style={s.statLabel}>ABONNÉS</Text>
             </View>
             <View style={s.statDivider} />
             <View style={s.statItem}>
-              <Text style={s.statValue}>{profile.following_count}</Text>
-              <Text style={s.statLabel}>ABONNÉ À</Text>
+              <Text style={s.statValue} data-testid="stat-following">{profile.following_count}</Text>
+              <Text style={s.statLabel}>ABONNEMENTS</Text>
             </View>
           </View>
         </View>
 
-        {/* Posts Wall */}
-        <View style={s.wallHeader}>
-          <Text style={s.wallTitle}>PUBLICATIONS</Text>
-          <Text style={s.wallCount}>{profile.posts.length}</Text>
+        {/* ── Topics Grid ── */}
+        <Text style={s.sectionTitle}>SES THÈMES</Text>
+        <View style={s.topicsGrid}>
+          {sortedCategories.map(([catKey, catData]) => {
+            const meta = CATEGORY_META[catKey] || { icon: '?', name: catKey, color: '#8A2BE2', bg: '#1A1A2E' };
+            return (
+              <View
+                key={catKey}
+                data-testid={`topic-${catKey}`}
+                style={[s.topicCard, { backgroundColor: meta.bg }]}
+              >
+                <View style={[s.topicIconBox, { backgroundColor: meta.color + '25' }]}>
+                  <Text style={s.topicIcon}>{meta.icon}</Text>
+                </View>
+                <Text style={[s.topicName, { color: meta.color }]}>{meta.name}</Text>
+                <Text style={s.topicLevel}>NiV. {catData.level}</Text>
+              </View>
+            );
+          })}
         </View>
+
+        {/* ── Posts Wall ── */}
+        <Text style={s.sectionTitle}>PUBLICATIONS</Text>
 
         {profile.posts.length === 0 ? (
           <View style={s.emptyWall}>
-            <Text style={s.emptyIcon}>📝</Text>
-            <Text style={s.emptyText}>Aucune publication pour le moment</Text>
+            <Text style={s.emptyText}>Aucune publication</Text>
           </View>
         ) : (
           profile.posts.map(post => (
             <View key={post.id} style={s.postCard}>
               <View style={s.postHeader}>
                 <View style={[s.postCatBadge, { backgroundColor: (CATEGORY_META[post.category_id]?.color || '#8A2BE2') + '20' }]}>
-                  <Text style={s.postCatIcon}>{CATEGORY_META[post.category_id]?.icon || '❓'}</Text>
+                  <Text style={s.postCatIcon}>{CATEGORY_META[post.category_id]?.icon || '?'}</Text>
                   <Text style={[s.postCatName, { color: CATEGORY_META[post.category_id]?.color || '#8A2BE2' }]}>
                     {post.category_name}
                   </Text>
@@ -246,7 +260,7 @@ export default function PlayerProfileScreen() {
                   <Text style={s.postActionCount}>{post.likes_count}</Text>
                 </View>
                 <View style={s.postActionItem}>
-                  <Text style={s.postActionIcon}>💬</Text>
+                  <Text style={s.postActionIcon}>{'💬'}</Text>
                   <Text style={s.postActionCount}>{post.comments_count}</Text>
                 </View>
               </View>
@@ -258,6 +272,8 @@ export default function PlayerProfileScreen() {
   );
 }
 
+const CARD_SIZE = (width - 56) / 2;
+
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   loadingContainer: { flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
@@ -266,51 +282,48 @@ const s = StyleSheet.create({
   backBtn: { paddingHorizontal: 20, paddingVertical: 12 },
   backText: { color: '#A3A3A3', fontSize: 15, fontWeight: '600' },
 
-  // Header
-  headerCard: {
-    marginHorizontal: 16, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.04)',
-    padding: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', marginBottom: 20, alignItems: 'center',
+  /* ── Hero Header ── */
+  heroCard: {
+    marginHorizontal: 16, borderRadius: 24, overflow: 'hidden',
+    backgroundColor: '#0D0D1A', borderWidth: 1, borderColor: 'rgba(138,43,226,0.2)',
+    paddingBottom: 24, alignItems: 'center',
   },
-
-  avatarSection: { alignItems: 'center', marginBottom: 16 },
+  heroBg: {
+    position: 'absolute', top: 0, left: 0, right: 0, height: 120,
+    backgroundColor: '#1A0A2E',
+  },
   avatarRing: {
-    width: 100, height: 100, borderRadius: 50,
+    marginTop: 60, width: 100, height: 100, borderRadius: 50,
     borderWidth: 3, borderColor: '#8A2BE2',
     justifyContent: 'center', alignItems: 'center',
-    shadowColor: '#8A2BE2', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 16,
+    backgroundColor: '#000',
   },
   avatar: {
     width: 90, height: 90, borderRadius: 45, backgroundColor: '#1A1A2E',
     justifyContent: 'center', alignItems: 'center',
   },
-  avatarText: { fontSize: 38, fontWeight: '900', color: '#8A2BE2' },
+  avatarText: { fontSize: 40, fontWeight: '900', color: '#8A2BE2' },
 
-  badgesRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
-  catBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, borderWidth: 1,
-  },
-  catBadgeIcon: { fontSize: 14 },
-  catBadgeLevel: { fontSize: 11, fontWeight: '800' },
+  pseudo: { fontSize: 26, fontWeight: '900', color: '#FFF', marginTop: 12 },
+  title: { fontSize: 14, color: '#B57EDC', fontWeight: '600', marginTop: 4 },
 
-  pseudo: { fontSize: 26, fontWeight: '900', color: '#FFF', marginBottom: 4 },
-  title: { fontSize: 15, color: '#A3A3A3', fontWeight: '600', marginBottom: 8 },
+  locationRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
+  locationFlag: { fontSize: 16 },
+  locationText: { color: '#A3A3A3', fontSize: 13, fontWeight: '600' },
 
-  countryRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 16 },
-  countryFlag: { fontSize: 18 },
-  countryText: { fontSize: 14, color: '#A3A3A3', fontWeight: '600' },
-
-  // Champions
-  championSection: { width: '100%', marginBottom: 16, gap: 8 },
+  /* Champions */
+  championSection: { width: '90%', marginTop: 12, gap: 6 },
   championBanner: {
-    backgroundColor: 'rgba(255,215,0,0.1)', borderRadius: 14, paddingVertical: 10, paddingHorizontal: 16,
-    borderWidth: 1, borderColor: 'rgba(255,215,0,0.3)', alignItems: 'center',
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: 'rgba(255,215,0,0.08)', borderRadius: 12, paddingVertical: 8, paddingHorizontal: 14,
+    borderWidth: 1, borderColor: 'rgba(255,215,0,0.2)',
   },
-  championText: { color: '#FFD700', fontSize: 15, fontWeight: '800' },
-  championSub: { color: '#A3A3A3', fontSize: 12, marginTop: 2 },
+  championIcon: { fontSize: 22 },
+  championText: { color: '#FFD700', fontSize: 13, fontWeight: '800' },
+  championSub: { color: '#A3A3A3', fontSize: 11, marginTop: 1 },
 
-  // Actions
-  actionsRow: { flexDirection: 'row', gap: 8, width: '100%', marginBottom: 20 },
+  /* Actions */
+  actionsRow: { flexDirection: 'row', gap: 8, width: '90%', marginTop: 16 },
   actionBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     paddingVertical: 12, borderRadius: 14, gap: 6, backgroundColor: '#8A2BE2',
@@ -321,26 +334,46 @@ const s = StyleSheet.create({
   actionIcon: { fontSize: 16 },
   actionText: { color: '#FFF', fontSize: 13, fontWeight: '700' },
 
-  // Stats
-  statsRow: { flexDirection: 'row', alignItems: 'center', width: '100%' },
-  statItem: { flex: 1, alignItems: 'center' },
-  statValue: { fontSize: 24, fontWeight: '900', color: '#FFF' },
-  statLabel: { fontSize: 9, fontWeight: '800', color: '#525252', letterSpacing: 1, marginTop: 4 },
-  statDivider: { width: 1, height: 36, backgroundColor: 'rgba(255,255,255,0.08)' },
-
-  // Wall
-  wallHeader: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 20, marginBottom: 12,
+  /* Stats Row */
+  statsRow: {
+    flexDirection: 'row', alignItems: 'center', width: '100%',
+    marginTop: 20, paddingTop: 20,
+    borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)',
   },
-  wallTitle: { fontSize: 12, fontWeight: '800', color: '#525252', letterSpacing: 2 },
-  wallCount: { fontSize: 12, fontWeight: '700', color: '#A3A3A3' },
+  statItem: { flex: 1, alignItems: 'center' },
+  statValue: { fontSize: 26, fontWeight: '900', color: '#FFF' },
+  statLabel: { fontSize: 9, fontWeight: '800', color: '#525252', letterSpacing: 1.5, marginTop: 4 },
+  statDivider: { width: 1, height: 40, backgroundColor: 'rgba(255,255,255,0.08)' },
 
-  emptyWall: { alignItems: 'center', paddingVertical: 40 },
-  emptyIcon: { fontSize: 40, marginBottom: 8 },
+  /* Section Title */
+  sectionTitle: {
+    fontSize: 12, fontWeight: '800', color: '#525252', letterSpacing: 3,
+    marginBottom: 14, marginTop: 24, paddingHorizontal: 20,
+  },
+
+  /* ── Topics Grid ── */
+  topicsGrid: {
+    flexDirection: 'row', flexWrap: 'wrap', gap: 12,
+    paddingHorizontal: 20,
+  },
+  topicCard: {
+    width: CARD_SIZE, borderRadius: 18, padding: 16,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+    alignItems: 'center',
+  },
+  topicIconBox: {
+    width: 64, height: 64, borderRadius: 18,
+    justifyContent: 'center', alignItems: 'center', marginBottom: 10,
+  },
+  topicIcon: { fontSize: 32 },
+  topicName: { fontSize: 14, fontWeight: '800', marginBottom: 4, textAlign: 'center' },
+  topicLevel: { fontSize: 11, fontWeight: '700', color: '#A3A3A3', letterSpacing: 1 },
+
+  /* Empty Wall */
+  emptyWall: { alignItems: 'center', paddingVertical: 30 },
   emptyText: { color: '#525252', fontSize: 15 },
 
-  // Post
+  /* Post */
   postCard: {
     marginHorizontal: 16, backgroundColor: 'rgba(255,255,255,0.04)',
     borderRadius: 16, padding: 16, marginBottom: 12,

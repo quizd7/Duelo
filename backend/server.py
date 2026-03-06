@@ -665,17 +665,34 @@ async def get_profile(user_id: str, db: AsyncSession = Depends(get_db)):
 
     all_titles = get_all_unlocked_titles(user)
 
+    # Followers / Following counts
+    followers_count_res = await db.execute(
+        select(func.count(PlayerFollow.id)).where(PlayerFollow.followed_id == user_id)
+    )
+    followers_count = followers_count_res.scalar() or 0
+
+    following_count_res = await db.execute(
+        select(func.count(PlayerFollow.id)).where(PlayerFollow.follower_id == user_id)
+    )
+    following_count = following_count_res.scalar() or 0
+
+    country_flag = COUNTRY_FLAGS.get(user.country or "", "")
+
     return {
         "user": {
             "id": user.id, "pseudo": user.pseudo, "avatar_seed": user.avatar_seed,
             "is_guest": user.is_guest, "total_xp": user.total_xp,
             "selected_title": user.selected_title,
+            "country": user.country,
+            "country_flag": country_flag,
             "categories": categories_data,
             "matches_played": user.matches_played, "matches_won": user.matches_won,
             "best_streak": user.best_streak, "current_streak": user.current_streak,
             "streak_badge": get_streak_badge(user.current_streak),
             "win_rate": round(user.matches_won / max(user.matches_played, 1) * 100),
             "mmr": round(user.mmr or 1000),
+            "followers_count": followers_count,
+            "following_count": following_count,
         },
         "all_unlocked_titles": all_titles,
         "match_history": [
