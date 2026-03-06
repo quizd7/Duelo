@@ -41,7 +41,7 @@ Application de quiz multijoueur compétitive avec esthétique "Dark Mode Premium
 - Follow/Unfollow catégorie
 - Noms d'auteurs cliquables vers profil joueur
 
-### 6. Profil Joueur Public (NOUVEAU - 2026-03-06)
+### 6. Profil Joueur Public (Testé et validé - 2026-03-06)
 - Avatar avec anneau violet, pseudo, titre, pays + drapeau
 - Badges catégorie avec niveaux
 - Titres de champion (#1 par catégorie)
@@ -49,21 +49,21 @@ Application de quiz multijoueur compétitive avec esthétique "Dark Mode Premium
 - Stats: Parties jouées, Abonnés, Abonnements
 - Mur de publications cross-catégories (lecture seule)
 
-### 7. Système de Follow entre joueurs (NOUVEAU - 2026-03-06)
+### 7. Système de Follow entre joueurs (Testé et validé - 2026-03-06)
 - Follow/Unfollow toggle entre joueurs
 - Protection self-follow
 - Compteurs followers/following
 
-### 8. Chat Éphémère (NOUVEAU - 2026-03-06)
+### 8. Chat Éphémère (Testé et validé - 2026-03-06)
 - Messagerie 1-à-1 entre joueurs
-- Messages auto-supprimés après 7 jours
+- Messages auto-supprimés après 7 jours (nettoyage lors du fetch conversations)
 - Bulles de messages (envoyé = violet, reçu = gris)
 - Indicateur de messages non lus
 - Polling toutes les 5 secondes
 - Format heure intelligent (il y a X min/h/j)
 - Limite 500 caractères par message
 
-### 9. Onglet Joueurs (NOUVEAU - 2026-03-06)
+### 9. Onglet Joueurs (Testé et validé - 2026-03-06)
 - Recherche de joueurs par pseudo
 - Filtres par catégorie d'intérêt
 - Liste avec avatar, pseudo, titre, XP, niveau
@@ -110,12 +110,12 @@ Application de quiz multijoueur compétitive avec esthétique "Dark Mode Premium
 - POST /api/wall/{post_id}/comment
 - GET /api/wall/{post_id}/comments
 
-### Player Profile & Social (NOUVEAU)
+### Player Profile & Social
 - GET /api/player/{user_id}/profile?viewer_id=X
 - POST /api/player/{user_id}/follow
 - GET /api/players/search?q=X&category=Y&country=Z&limit=N
 
-### Chat (NOUVEAU)
+### Chat
 - POST /api/chat/send
 - GET /api/chat/conversations/{user_id}
 - GET /api/chat/{user_id}/messages?with_user=X
@@ -127,11 +127,11 @@ frontend/app/
 ├── (tabs)/
 │   ├── _layout.tsx      # Tab navigator (Jouer / Joueurs / Profil)
 │   ├── home.tsx         # Écran principal, liste catégories
-│   ├── players.tsx      # NOUVEAU - Recherche joueurs + Messages
+│   ├── players.tsx      # Recherche joueurs + Messages
 │   └── profile.tsx      # Profil utilisateur
 ├── category-detail.tsx  # Page détail catégorie + mur social
-├── player-profile.tsx   # NOUVEAU - Profil public joueur
-├── chat.tsx             # NOUVEAU - Chat 1-à-1
+├── player-profile.tsx   # Profil public joueur
+├── chat.tsx             # Chat 1-à-1
 ├── matchmaking.tsx      # Écran matchmaking
 ├── results.tsx          # Résultats de match
 └── index.tsx            # Écran d'inscription
@@ -140,9 +140,12 @@ frontend/app/
 ## Prochaines Étapes (Backlog)
 1. Authentification Google/Apple (fournira l'âge)
 2. Filtre joueurs par âge (post-auth Google/Apple)
-3. Support vidéo dans les posts du mur
-4. Plus de catégories et questions
-5. Deep Links pour partage
-6. Matchmaking temps réel (WebSocket)
-7. Système de saisons et récompenses
-8. Notifications push
+3. Filtre joueurs par distance (géolocalisation IP déjà implémentée)
+4. Support vidéo dans les posts du mur
+5. Plus de catégories et questions
+6. Deep Links pour partage
+7. Matchmaking temps réel (WebSocket)
+8. Système de saisons et récompenses
+9. Notifications push
+10. Titres de championnat (événements temporels)
+11. Refactoring: découper server.py en modules (routes, modèles, services)
