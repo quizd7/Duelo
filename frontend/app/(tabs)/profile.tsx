@@ -15,6 +15,11 @@ const CATEGORY_META: Record<string, { icon: string; name: string; color: string;
   series_tv: { icon: '📺', name: 'Séries TV', color: '#E040FB', bg: '#2D1B4E' },
   geographie: { icon: '🌍', name: 'Géographie', color: '#00FFFF', bg: '#0D2B2B' },
   histoire: { icon: '🏛️', name: 'Histoire', color: '#FFD700', bg: '#2B2510' },
+  cinema: { icon: '🎬', name: 'Cinéma', color: '#FF6B6B', bg: '#2B1515' },
+  sport: { icon: '⚽', name: 'Sport', color: '#00FF9D', bg: '#0D2B1A' },
+  musique: { icon: '🎵', name: 'Musique', color: '#FF8C00', bg: '#2B1E0D' },
+  sciences: { icon: '🔬', name: 'Sciences', color: '#7B68EE', bg: '#1A1533' },
+  gastronomie: { icon: '🍽️', name: 'Gastronomie', color: '#FF69B4', bg: '#2B152B' },
 };
 
 const BADGE_MAP: Record<string, string> = { fire: '🔥', bolt: '⚡', glow: '✨' };
@@ -311,7 +316,7 @@ export default function ProfileScreen() {
   );
 }
 
-const CARD_SIZE = (width - 56) / 2;
+const CARD_SIZE = (width - 72) / 4;
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
@@ -387,17 +392,17 @@ const s = StyleSheet.create({
     paddingHorizontal: 20,
   },
   topicCard: {
-    width: CARD_SIZE, borderRadius: 18, padding: 16,
+    width: CARD_SIZE, borderRadius: 14, padding: 10,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
     alignItems: 'center',
   },
   topicIconBox: {
-    width: 64, height: 64, borderRadius: 18,
-    justifyContent: 'center', alignItems: 'center', marginBottom: 10,
+    width: 44, height: 44, borderRadius: 14,
+    justifyContent: 'center', alignItems: 'center', marginBottom: 6,
   },
-  topicIcon: { fontSize: 32 },
-  topicName: { fontSize: 14, fontWeight: '800', marginBottom: 4, textAlign: 'center' },
-  topicLevel: { fontSize: 11, fontWeight: '700', color: '#A3A3A3', letterSpacing: 1, marginBottom: 8 },
+  topicIcon: { fontSize: 22 },
+  topicName: { fontSize: 10, fontWeight: '800', marginBottom: 2, textAlign: 'center' },
+  topicLevel: { fontSize: 9, fontWeight: '700', color: '#A3A3A3', letterSpacing: 0.5, marginBottom: 6 },
   topicBarBg: { width: '80%', height: 4, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' },
   topicBarFill: { height: 4, borderRadius: 2 },
 

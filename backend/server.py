@@ -56,6 +56,11 @@ class UserResponse(BaseModel):
     xp_series_tv: int = 0
     xp_geographie: int = 0
     xp_histoire: int = 0
+    xp_cinema: int = 0
+    xp_sport: int = 0
+    xp_musique: int = 0
+    xp_sciences: int = 0
+    xp_gastronomie: int = 0
     total_xp: int = 0
     matches_played: int = 0
     matches_won: int = 0
@@ -200,6 +205,41 @@ CATEGORY_TITLES = {
         35: "Archiviste Royal",
         50: "Gardien du Temps",
     },
+    "cinema": {
+        1: "Spectateur",
+        10: "Cinéphile",
+        20: "Critique d'Art",
+        35: "Réalisateur",
+        50: "Légende du 7e Art",
+    },
+    "sport": {
+        1: "Supporter",
+        10: "Athlète",
+        20: "Champion",
+        35: "Coach Légendaire",
+        50: "Hall of Fame",
+    },
+    "musique": {
+        1: "Auditeur",
+        10: "Mélomane",
+        20: "Virtuose",
+        35: "Compositeur",
+        50: "Maestro Éternel",
+    },
+    "sciences": {
+        1: "Curieux",
+        10: "Laborantin",
+        20: "Chercheur",
+        35: "Professeur",
+        50: "Prix Nobel",
+    },
+    "gastronomie": {
+        1: "Gourmand",
+        10: "Gourmet",
+        20: "Chef Cuisinier",
+        35: "Chef Étoilé",
+        50: "Maître Culinaire",
+    },
 }
 
 def get_category_title(category: str, level: int) -> str:
@@ -252,13 +292,23 @@ BOT_NAMES = [
 CATEGORY_MAP = {
     "series_tv": "Séries TV Cultes",
     "geographie": "Géographie Mondiale",
-    "histoire": "Histoire de France"
+    "histoire": "Histoire de France",
+    "cinema": "Cinéma",
+    "sport": "Sport",
+    "musique": "Musique",
+    "sciences": "Sciences",
+    "gastronomie": "Gastronomie",
 }
 
 CATEGORY_XP_FIELD = {
     "series_tv": "xp_series_tv",
     "geographie": "xp_geographie",
-    "histoire": "xp_histoire"
+    "histoire": "xp_histoire",
+    "cinema": "xp_cinema",
+    "sport": "xp_sport",
+    "musique": "xp_musique",
+    "sciences": "xp_sciences",
+    "gastronomie": "xp_gastronomie",
 }
 
 TOTAL_QUESTIONS = 7
@@ -443,6 +493,11 @@ def ensure_season(user):
         user.seasonal_xp_series_tv = 0
         user.seasonal_xp_geographie = 0
         user.seasonal_xp_histoire = 0
+        user.seasonal_xp_cinema = 0
+        user.seasonal_xp_sport = 0
+        user.seasonal_xp_musique = 0
+        user.seasonal_xp_sciences = 0
+        user.seasonal_xp_gastronomie = 0
         user.seasonal_total_xp = 0
         user.season_month = current
 
@@ -555,7 +610,7 @@ async def submit_match(data: MatchSubmit, db: AsyncSession = Depends(get_db)):
         # All-Time XP
         if xp_field:
             setattr(user, xp_field, getattr(user, xp_field, 0) + total_xp)
-        user.total_xp = user.xp_series_tv + user.xp_geographie + user.xp_histoire
+        user.total_xp = user.xp_series_tv + user.xp_geographie + user.xp_histoire + user.xp_cinema + user.xp_sport + user.xp_musique + user.xp_sciences + user.xp_gastronomie
 
         # Seasonal XP
         ensure_season(user)
@@ -563,7 +618,9 @@ async def submit_match(data: MatchSubmit, db: AsyncSession = Depends(get_db)):
         if seasonal_field:
             setattr(user, seasonal_field, getattr(user, seasonal_field, 0) + total_xp)
         user.seasonal_total_xp = (
-            user.seasonal_xp_series_tv + user.seasonal_xp_geographie + user.seasonal_xp_histoire
+            user.seasonal_xp_series_tv + user.seasonal_xp_geographie + user.seasonal_xp_histoire +
+            user.seasonal_xp_cinema + user.seasonal_xp_sport + user.seasonal_xp_musique +
+            user.seasonal_xp_sciences + user.seasonal_xp_gastronomie
         )
 
         # MMR update (simplified Elo)
@@ -1526,6 +1583,66 @@ async def seed_questions(db: AsyncSession = Depends(get_db)):
             {"question_text": "En quelle année le mur de Berlin est-il tombé ?", "options": ["1987", "1988", "1989", "1990"], "correct_option": 2, "difficulty": "easy"},
             {"question_text": "Qui a construit le château de Versailles ?", "options": ["François Ier", "Henri IV", "Louis XIII", "Louis XIV"], "correct_option": 3, "difficulty": "medium"},
             {"question_text": "Quel empereur a créé le Code civil français ?", "options": ["Charlemagne", "Napoléon Bonaparte", "Louis XIV", "Napoléon III"], "correct_option": 1, "difficulty": "easy"},
+        ],
+        "cinema": [
+            {"question_text": "Qui a réalisé Pulp Fiction ?", "options": ["Martin Scorsese", "Quentin Tarantino", "Steven Spielberg", "David Lynch"], "correct_option": 1, "difficulty": "easy"},
+            {"question_text": "Quel film a remporté la Palme d'Or à Cannes en 2019 ?", "options": ["Joker", "Parasite", "Once Upon a Time in Hollywood", "Douleur et Gloire"], "correct_option": 1, "difficulty": "medium"},
+            {"question_text": "Dans quel film entend-on 'Je suis ton père' ?", "options": ["Star Trek", "Star Wars : L'Empire contre-attaque", "Matrix", "Alien"], "correct_option": 1, "difficulty": "easy"},
+            {"question_text": "Qui joue Jack dans Titanic ?", "options": ["Brad Pitt", "Matt Damon", "Leonardo DiCaprio", "Johnny Depp"], "correct_option": 2, "difficulty": "easy"},
+            {"question_text": "Quel film d'animation Pixar met en scène des émotions ?", "options": ["Coco", "Vice-Versa", "Là-Haut", "Wall-E"], "correct_option": 1, "difficulty": "easy"},
+            {"question_text": "Combien de films composent la saga Harry Potter ?", "options": ["6", "7", "8", "9"], "correct_option": 2, "difficulty": "easy"},
+            {"question_text": "Quel acteur français a joué dans Le Fabuleux Destin d'Amélie Poulain ?", "options": ["Jean Reno", "Audrey Tautou", "Marion Cotillard", "Gérard Depardieu"], "correct_option": 1, "difficulty": "easy"},
+            {"question_text": "Quel réalisateur est connu pour Inception et Interstellar ?", "options": ["Ridley Scott", "James Cameron", "Christopher Nolan", "Denis Villeneuve"], "correct_option": 2, "difficulty": "easy"},
+            {"question_text": "Dans quel film voit-on un requin terroriser une station balnéaire ?", "options": ["Piranha", "Les Dents de la Mer", "Deep Blue Sea", "47 Meters Down"], "correct_option": 1, "difficulty": "easy"},
+            {"question_text": "Quel film détient le record au box-office mondial ?", "options": ["Avengers: Endgame", "Avatar", "Titanic", "Star Wars VII"], "correct_option": 1, "difficulty": "medium"},
+        ],
+        "sport": [
+            {"question_text": "Combien de joueurs composent une équipe de football sur le terrain ?", "options": ["9", "10", "11", "12"], "correct_option": 2, "difficulty": "easy"},
+            {"question_text": "Qui détient le record de Ballons d'Or ?", "options": ["Cristiano Ronaldo", "Lionel Messi", "Zinédine Zidane", "Pelé"], "correct_option": 1, "difficulty": "easy"},
+            {"question_text": "Dans quel sport utilise-t-on un volant ?", "options": ["Tennis", "Badminton", "Squash", "Ping-pong"], "correct_option": 1, "difficulty": "easy"},
+            {"question_text": "En quelle année la France a-t-elle gagné sa première Coupe du Monde de football ?", "options": ["1994", "1998", "2002", "2006"], "correct_option": 1, "difficulty": "easy"},
+            {"question_text": "Quel sprinter jamaïcain est surnommé 'Lightning Bolt' ?", "options": ["Asafa Powell", "Yohan Blake", "Usain Bolt", "Tyson Gay"], "correct_option": 2, "difficulty": "easy"},
+            {"question_text": "Combien de sets faut-il gagner en finale de Roland-Garros (hommes) ?", "options": ["2", "3", "4", "5"], "correct_option": 1, "difficulty": "medium"},
+            {"question_text": "Dans quel sport LeBron James est-il une légende ?", "options": ["Football américain", "Baseball", "Basketball", "Hockey"], "correct_option": 2, "difficulty": "easy"},
+            {"question_text": "Quelle ville a accueilli les Jeux Olympiques d'été en 2024 ?", "options": ["Tokyo", "Londres", "Paris", "Los Angeles"], "correct_option": 2, "difficulty": "easy"},
+            {"question_text": "Au rugby, combien de points vaut un essai ?", "options": ["3", "5", "7", "10"], "correct_option": 1, "difficulty": "medium"},
+            {"question_text": "Quel pays a le plus de Coupes du Monde de football ?", "options": ["Allemagne", "Italie", "Argentine", "Brésil"], "correct_option": 3, "difficulty": "easy"},
+        ],
+        "musique": [
+            {"question_text": "Quel groupe a chanté 'Bohemian Rhapsody' ?", "options": ["The Beatles", "Queen", "Led Zeppelin", "Pink Floyd"], "correct_option": 1, "difficulty": "easy"},
+            {"question_text": "Combien de cordes a un violon ?", "options": ["3", "4", "5", "6"], "correct_option": 1, "difficulty": "easy"},
+            {"question_text": "Qui est surnommé le 'King of Pop' ?", "options": ["Prince", "Elvis Presley", "Michael Jackson", "James Brown"], "correct_option": 2, "difficulty": "easy"},
+            {"question_text": "Quel compositeur allemand est devenu sourd ?", "options": ["Mozart", "Bach", "Beethoven", "Brahms"], "correct_option": 2, "difficulty": "easy"},
+            {"question_text": "Quel rappeur français a sorti l'album 'Civilisation' ?", "options": ["Booba", "PNL", "Orelsan", "Jul"], "correct_option": 2, "difficulty": "medium"},
+            {"question_text": "Quel instrument joue-t-on avec un archet ?", "options": ["Guitare", "Piano", "Violoncelle", "Flûte"], "correct_option": 2, "difficulty": "easy"},
+            {"question_text": "De quel pays vient le genre musical K-pop ?", "options": ["Japon", "Chine", "Corée du Sud", "Thaïlande"], "correct_option": 2, "difficulty": "easy"},
+            {"question_text": "Qui a chanté 'La Vie en rose' ?", "options": ["Dalida", "Édith Piaf", "Céline Dion", "Barbara"], "correct_option": 1, "difficulty": "easy"},
+            {"question_text": "Quel groupe a sorti l'album 'Abbey Road' ?", "options": ["The Rolling Stones", "The Beatles", "The Who", "The Doors"], "correct_option": 1, "difficulty": "easy"},
+            {"question_text": "Combien de touches a un piano standard ?", "options": ["66", "76", "88", "100"], "correct_option": 2, "difficulty": "medium"},
+        ],
+        "sciences": [
+            {"question_text": "Quel est le symbole chimique de l'eau ?", "options": ["O2", "CO2", "H2O", "NaCl"], "correct_option": 2, "difficulty": "easy"},
+            {"question_text": "Quelle planète est la plus proche du Soleil ?", "options": ["Vénus", "Mercure", "Mars", "Terre"], "correct_option": 1, "difficulty": "easy"},
+            {"question_text": "Qui a formulé la théorie de la relativité ?", "options": ["Isaac Newton", "Albert Einstein", "Niels Bohr", "Stephen Hawking"], "correct_option": 1, "difficulty": "easy"},
+            {"question_text": "Combien d'os compte le corps humain adulte ?", "options": ["186", "206", "226", "256"], "correct_option": 1, "difficulty": "medium"},
+            {"question_text": "Quel gaz les plantes absorbent-elles lors de la photosynthèse ?", "options": ["Oxygène", "Azote", "Dioxyde de carbone", "Hydrogène"], "correct_option": 2, "difficulty": "easy"},
+            {"question_text": "Quelle est la vitesse de la lumière ?", "options": ["150 000 km/s", "300 000 km/s", "500 000 km/s", "1 000 000 km/s"], "correct_option": 1, "difficulty": "medium"},
+            {"question_text": "Quel élément chimique a le numéro atomique 1 ?", "options": ["Hélium", "Hydrogène", "Lithium", "Carbone"], "correct_option": 1, "difficulty": "easy"},
+            {"question_text": "Quel organe pompe le sang dans le corps humain ?", "options": ["Le foie", "Les poumons", "Le coeur", "Le cerveau"], "correct_option": 2, "difficulty": "easy"},
+            {"question_text": "Combien de planètes composent le système solaire ?", "options": ["7", "8", "9", "10"], "correct_option": 1, "difficulty": "easy"},
+            {"question_text": "Quel scientifique a découvert la pénicilline ?", "options": ["Louis Pasteur", "Alexander Fleming", "Marie Curie", "Robert Koch"], "correct_option": 1, "difficulty": "medium"},
+        ],
+        "gastronomie": [
+            {"question_text": "Quel pays est le berceau de la pizza ?", "options": ["France", "Espagne", "Italie", "Grèce"], "correct_option": 2, "difficulty": "easy"},
+            {"question_text": "Quel fromage français est surnommé le 'Roi des fromages' ?", "options": ["Camembert", "Roquefort", "Brie de Meaux", "Comté"], "correct_option": 2, "difficulty": "medium"},
+            {"question_text": "Quel est l'ingrédient principal du guacamole ?", "options": ["Tomate", "Avocat", "Piment", "Oignon"], "correct_option": 1, "difficulty": "easy"},
+            {"question_text": "Combien d'étoiles maximum un restaurant peut-il obtenir au Guide Michelin ?", "options": ["2", "3", "4", "5"], "correct_option": 1, "difficulty": "easy"},
+            {"question_text": "De quel pays vient le sushi ?", "options": ["Chine", "Corée", "Japon", "Thaïlande"], "correct_option": 2, "difficulty": "easy"},
+            {"question_text": "Quel vin est produit en Champagne ?", "options": ["Bordeaux", "Bourgogne", "Champagne", "Rosé"], "correct_option": 2, "difficulty": "easy"},
+            {"question_text": "Quel chef français est connu pour ses émissions de cuisine et son restaurant L'Atelier ?", "options": ["Paul Bocuse", "Alain Ducasse", "Joël Robuchon", "Cyril Lignac"], "correct_option": 2, "difficulty": "medium"},
+            {"question_text": "Quel fruit est l'ingrédient principal de la tarte Tatin ?", "options": ["Poire", "Pomme", "Abricot", "Cerise"], "correct_option": 1, "difficulty": "easy"},
+            {"question_text": "Quel plat japonais signifie littéralement 'viande grillée' ?", "options": ["Sashimi", "Tempura", "Yakitori", "Ramen"], "correct_option": 2, "difficulty": "medium"},
+            {"question_text": "De quel pays vient le couscous traditionnellement ?", "options": ["Turquie", "Liban", "Maghreb", "Égypte"], "correct_option": 2, "difficulty": "easy"},
         ]
     }
 

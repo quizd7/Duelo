@@ -15,6 +15,11 @@ const CATEGORY_META: Record<string, { icon: string; color: string; name: string 
   series_tv: { icon: '📺', color: '#E040FB', name: 'Séries TV' },
   geographie: { icon: '🌍', color: '#00FFFF', name: 'Géographie' },
   histoire: { icon: '🏛️', color: '#FFD700', name: 'Histoire' },
+  cinema: { icon: '🎬', color: '#FF6B6B', name: 'Cinéma' },
+  sport: { icon: '⚽', color: '#00FF9D', name: 'Sport' },
+  musique: { icon: '🎵', color: '#FF8C00', name: 'Musique' },
+  sciences: { icon: '🔬', color: '#7B68EE', name: 'Sciences' },
+  gastronomie: { icon: '🍽️', color: '#FF69B4', name: 'Gastronomie' },
 };
 
 type PlayerResult = {

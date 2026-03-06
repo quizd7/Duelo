@@ -14,12 +14,22 @@ const CATEGORY_ICONS: Record<string, string> = {
   series_tv: '📺',
   geographie: '🌍',
   histoire: '🏛️',
+  cinema: '🎬',
+  sport: '⚽',
+  musique: '🎵',
+  sciences: '🔬',
+  gastronomie: '🍽️',
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
   series_tv: '#E040FB',
   geographie: '#00FFFF',
   histoire: '#FFD700',
+  cinema: '#FF6B6B',
+  sport: '#00FF9D',
+  musique: '#FF8C00',
+  sciences: '#7B68EE',
+  gastronomie: '#FF69B4',
 };
 
 type Category = {

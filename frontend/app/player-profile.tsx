@@ -15,6 +15,11 @@ const CATEGORY_META: Record<string, { icon: string; color: string; name: string;
   series_tv: { icon: '📺', color: '#E040FB', name: 'Séries TV', bg: '#2D1B4E' },
   geographie: { icon: '🌍', color: '#00FFFF', name: 'Géographie', bg: '#0D2B2B' },
   histoire: { icon: '🏛️', color: '#FFD700', name: 'Histoire', bg: '#2B2510' },
+  cinema: { icon: '🎬', color: '#FF6B6B', name: 'Cinéma', bg: '#2B1515' },
+  sport: { icon: '⚽', color: '#00FF9D', name: 'Sport', bg: '#0D2B1A' },
+  musique: { icon: '🎵', color: '#FF8C00', name: 'Musique', bg: '#2B1E0D' },
+  sciences: { icon: '🔬', color: '#7B68EE', name: 'Sciences', bg: '#1A1533' },
+  gastronomie: { icon: '🍽️', color: '#FF69B4', name: 'Gastronomie', bg: '#2B152B' },
 };
 
 type PlayerProfile = {
@@ -272,7 +277,7 @@ export default function PlayerProfileScreen() {
   );
 }
 
-const CARD_SIZE = (width - 56) / 2;
+const CARD_SIZE = (width - 72) / 4;
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
@@ -357,17 +362,17 @@ const s = StyleSheet.create({
     paddingHorizontal: 20,
   },
   topicCard: {
-    width: CARD_SIZE, borderRadius: 18, padding: 16,
+    width: CARD_SIZE, borderRadius: 14, padding: 10,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
     alignItems: 'center',
   },
   topicIconBox: {
-    width: 64, height: 64, borderRadius: 18,
-    justifyContent: 'center', alignItems: 'center', marginBottom: 10,
+    width: 44, height: 44, borderRadius: 14,
+    justifyContent: 'center', alignItems: 'center', marginBottom: 6,
   },
-  topicIcon: { fontSize: 32 },
-  topicName: { fontSize: 14, fontWeight: '800', marginBottom: 4, textAlign: 'center' },
-  topicLevel: { fontSize: 11, fontWeight: '700', color: '#A3A3A3', letterSpacing: 1 },
+  topicIcon: { fontSize: 22 },
+  topicName: { fontSize: 10, fontWeight: '800', marginBottom: 2, textAlign: 'center' },
+  topicLevel: { fontSize: 9, fontWeight: '700', color: '#A3A3A3', letterSpacing: 0.5 },
 
   /* Empty Wall */
   emptyWall: { alignItems: 'center', paddingVertical: 30 },

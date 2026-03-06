@@ -32,12 +32,22 @@ class User(Base):
     xp_series_tv = Column(Integer, default=0)
     xp_geographie = Column(Integer, default=0)
     xp_histoire = Column(Integer, default=0)
+    xp_cinema = Column(Integer, default=0)
+    xp_sport = Column(Integer, default=0)
+    xp_musique = Column(Integer, default=0)
+    xp_sciences = Column(Integer, default=0)
+    xp_gastronomie = Column(Integer, default=0)
     total_xp = Column(Integer, default=0)
 
     # Seasonal XP (reset monthly)
     seasonal_xp_series_tv = Column(Integer, default=0)
     seasonal_xp_geographie = Column(Integer, default=0)
     seasonal_xp_histoire = Column(Integer, default=0)
+    seasonal_xp_cinema = Column(Integer, default=0)
+    seasonal_xp_sport = Column(Integer, default=0)
+    seasonal_xp_musique = Column(Integer, default=0)
+    seasonal_xp_sciences = Column(Integer, default=0)
+    seasonal_xp_gastronomie = Column(Integer, default=0)
     seasonal_total_xp = Column(Integer, default=0)
     season_month = Column(String(7), nullable=True)  # "2026-03"
 
