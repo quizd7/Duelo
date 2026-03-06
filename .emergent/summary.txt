@@ -1,98 +1,104 @@
 <analysis>
-
 **original_problem_statement:**
-The user initially presented a mobile quiz app called Duelo.
-The user then requested a series of significant changes:
-1.  **UI Bug Fix:** On the matchmaking VS screen, a player's streak badge would misalign the player avatars and names. This needed to be fixed so that both players' details are always aligned horizontally at the top.
-2.  **Core Logic Overhaul:**
-    *   Remove the global leaderboard and global player level. All progression must become category-specific.
-    *   Implement a new XP formula for category levels: , with a cap at level 50.
-    *   Introduce Mastery Titles unlocked at levels 1, 10, 20, 35, and 50 within each category. Users should be able to select which title to display. A celebration modal should appear when a new title is unlocked.
-    *   Implement Intelligent Matchmaking that pairs players with opponents of a similar category level (+/- 5 levels), creating a bot if no human is found within 5 seconds.
-3.  **New Social Feature:**
-    *   Based on a provided image, create a new, detailed category page.
-    *   This page should include:
-        *   Header with category info.
-        *   Buttons to Play, Follow, and view a category-specific Leaderboard.
-        *   Stats: a progress bar for completed questions, user's level in the category, follower count, and total question count.
-        *   A community wall where users can create posts (text, image, video), and other users can comment and like.
+The user's application is a mobile quiz game called Duelo. Initially, the goal was to fix a UI bug and overhaul the core logic from a global progression system to a category-specific one (XP, levels, titles), and implement a social wall on a new category detail page.
+
+During this session, after the successful completion and testing of the category social wall, the user submitted a new, major feature request based on an image provided.
+
+**PRODUCT REQUIREMENTS (New Feature):**
+1.  **Player Profile Page:** Create a dynamic public profile page for each user, accessible by clicking on their name anywhere in the app (leaderboards, social walls, match results).
+    *   **Content:** Player's photo, username, selected title, country (with flag), and any special championship titles (e.g., Champion France - Séries TV - Mars 2026).
+    *   **Actions:** Buttons to Play (initiate a match), Follow the player, and send a Message.
+    *   **Stats:** Number of games played, number of followers, and number of accounts they are following.
+    *   **Wall:** A feed displaying that user's posts from all category walls. It should not be possible for visitors to post on a player's personal wall.
+2.  **Player Search & Discovery:**
+    *   Add a new Joueurs (Players) tab to the main bottom navigation.
+    *   This tab should allow searching for other players. The user mentioned filtering by age, distance (local), and interests (categories).
+3.  **Private Chat:**
+    *   Implement a one-on-one chat system, accessible from the player's profile page.
+    *   The UI should be aesthetically pleasing.
+    *   **Crucially, messages should be automatically deleted after one week.**
+4.  **Technical Requirements & Assumptions:**
+    *   **Geolocation:** Player search should support local search via IP address geolocation.
+    *   **Authentication:** The user mentioned that age information would come from Google/Apple sign-in, indicating a future requirement to move away from guest-based login to social authentication.
 
 **User's preferred language**: French. The next agent MUST respond in French.
 
 **what currently exists?**
-The application is a full-stack quiz game. The initial version has been heavily modified. The global level and leaderboard system has been successfully replaced with a per-category progression system, including levels, XP, and unlockable titles. The matchmaking logic has been updated accordingly.
-
-A new major feature, a detailed category page with a social wall (posts, likes, comments, followers), has just been implemented on both the backend (new DB tables and APIs) and frontend (new screen at ). The home screen now navigates to these new pages.
+The application is a full-stack quiz game with category-specific progression.
+The previous major feature, the Category Detail Page with a social wall, was fully tested and completed in this session.
+Immediately after, the agent performed a large-scale implementation of the new Player Profile, Search, and Chat feature. The backend has been updated with new database tables (, ), IP geolocation logic, and all necessary API endpoints in . The frontend has been updated with a new Joueurs tab and new screens for player profiles (), player search (), and chat (). Links to player profiles have been integrated into the category social wall and leaderboards. The feature is code-complete but requires full testing.
 
 **Last working item**:
-- Last item agent was working: The agent just completed the initial implementation of the Category Detail Page with a full social wall feature. This involved creating new database tables (, , , ), building corresponding FastAPI endpoints, creating a new dynamic route and screen in the frontend (), and connecting the home screen to navigate to it.
+- Last item agent was working: The agent just completed the initial implementation of the comprehensive Player Social Suite (Profiles, Search, Chat). This involved significant backend changes (new models, new endpoints for search/profile/follow/chat, IP geolocation) and frontend changes (new screens for players, profile, chat, and a new tab in the main layout).
 - Status: IN PROGRESS
-- Agent Testing Done: N
+- Agent Testing Done: N (Only visual verification via screenshots and basic  checks to confirm endpoints exist. No functional end-to-end testing was performed.)
 - Which testing method agent to use? both
-  - **Backend:** Use  to validate all new social endpoints (, , , , etc.).
-  - **Frontend:** Use  to test the full user flow on the new category page: navigating to it, following the category, creating a post with and without an image, liking a post, and adding a comment.
+    - **Backend:** A full suite of tests is required for all new player-related endpoints in . This includes search, profile retrieval, following/unfollowing, fetching conversations, and sending messages.  or chained  commands should be used.
+    - **Frontend:**  should be used to validate the entire user flow: navigating to the new Joueurs tab, searching for a player, viewing their profile, following them, initiating a chat, and sending a message.
 - User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Full verification of the Social Wall feature (P0)**
+- **Issue 1: Full end-to-end testing of the Player Profile, Search, and Chat feature (P0)**
+- **Issue 2: Implement automatic chat message deletion (P1)**
 
 **Issues Detail**:
--   **Issue 1: Full verification of the Social Wall feature**
-    -   **Attempted fixes:** The feature has been built, and initial visual verification via screenshots confirms the UI layout is correct. However, the interactive elements (posting, liking, following, commenting) have not been tested.
-    -   **Next debug checklist:**
-        1.  **Backend:** Run  to ensure all new social APIs in  are robust and function as expected (create post, like, comment, follow, etc.).
-        2.  **Frontend:** Use  to simulate user interactions on :
-            *   Click the Suivre (Follow) button and verify the backend call.
-            *   Click the + Publier (Publish) button, open the post creation modal.
-            *   Create a text-only post and verify it appears on the wall.
-            *   Create a post with an image (this will test  integration) and verify it appears correctly.
-            *   Click the like and comment buttons on a post and verify functionality.
-    -   **Why fix this issue and what will be achieved with the fix?** This is a major new feature requested by the user. Thorough testing is required to confirm it is fully functional and bug-free before presenting it as complete.
-    -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Both.
-    -   **Blocked on other issue:** None.
+- **Issue 1:**
+    - **Attempted fixes:** The agent built all backend and frontend components. Visual verification with screenshots confirmed the new UI pages render correctly. Basic  tests confirmed the new API routes are registered. However, no functional testing has occurred.
+    - **Next debug checklist:**
+        1.  Thoroughly test the backend APIs for player search, profile, follow, and chat in .
+        2.  Use the  to test the complete user journey: Search player -> View profile -> Follow -> Click Message -> Send a chat message.
+        3.  Verify that clicking a user's name on the category wall () correctly navigates to their profile page ().
+    - **Why fix this issue and what will be achieved with the fix?** This is a massive, user-requested feature that is currently untested. Completing this will deliver a core part of the app's new social dimension.
+    - **Status:** IN PROGRESS
+    - **Is recurring issue?** N
+    - **Should Test frontend/backend/both after fix?** Both.
+    - **Blocked on other issue:** None.
+- **Issue 2:**
+    - **Attempted fixes:** None. This was requested by the user but overlooked during implementation.
+    - **Next debug checklist:**
+        1.  Implement a mechanism on the backend () to periodically delete  older than 7 days. This could be a scheduled task or a check that runs on a relevant trigger.
+        2.  A simple approach could be a new, secured API endpoint that can be called by a cron job, or logic within an existing user flow (like fetching a conversation) to clean up old messages for that specific chat.
+    - **Why fix this issue and what will be achieved with the fix?** To fulfill a specific user requirement for the chat feature and manage database size.
+    - **Status:** NOT STARTED
+    - **Is recurring issue?** N
+    - **Should Test frontend/backend/both after fix?** Backend.
+    - **Blocked on other issue:** Issue 1 should be completed first to ensure the chat system works at all.
 
 **In progress Task List**:
--   **Task 1: Complete and test the Category Detail Page and Social Wall (P0)**
-
-**Task Detail**:
--   **Task 1: Complete and test the Category Detail Page and Social Wall**
-    -   **Where to resume:** The code is implemented. The next step is to initiate backend testing, followed by frontend testing, as outlined in the Pending/In progress Issue list above.
-    -   **What will be achieved with this?** A fully functional and tested social hub for each quiz category, meeting the user's latest request.
-    -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** Both
-    -   **Blocked on something:** No.
+- **Task 1: Test and stabilize the new Player Social Suite (P0)**
+    - **Where to resume:** Begin with rigorous backend testing of all new endpoints in .
+    - **What will be achieved with this?** A fully functional and stable social feature set (profiles, search, chat) as requested by the user.
+    - **Status:** IN PROGRESS
+    - **Should Test frontend/backend/both after fix?** Both
+    - **Blocked on something:** No.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks:**
-  - **Category Leaderboard (P1):** The user's design for the category detail page included a Classement (Leaderboard) button. The backend logic for a global leaderboard was removed, but a new endpoint and UI will be needed to display a leaderboard specific to each category.
-    - Files to modify:  (new endpoint),  (connect button to a new screen).
+  - **Social Logins (Google/Apple) (P1):** The user specified this as their intended authentication method. This is a prerequisite for implementing age-based filtering in player search. This will require using the .
 - **Future Tasks:**
-  - **Video Posts:** The user mentioned posts could contain texte, image, vidéo. The current implementation only handles text and images. Video support would be a future enhancement.
+  - **Advanced Player Search Filters (P2):** The current search is basic. The UI and backend logic need to be enhanced to support filtering by age and distance (using the already-implemented geolocation data).
+  - **Video Posts (P2):** The original request for the category wall mentioned video support, which has not been implemented.
+  - **Championship Titles (P3):** The user's mock-up mentioned a title like champion france... mars 2026. This implies a system for event-based or time-sensitive awards, which is more complex than the current level-based title system.
 
 **Completed work in this session**
 - List of all completed tasks with file and method name:
-  - **Matchmaking Alignment Fix:** Corrected a flexbox alignment issue in  by changing  to .
-  - **Core Logic Overhaul (Backend):**
-    - Added  column to  table.
-    - Reworked XP calculation, level-up logic, and title unlocking in  endpoint in .
-    - Implemented intelligent, category-based matchmaking in  in .
-    - Created  endpoint in .
-  - **Core Logic Overhaul (Frontend):**
-    - Removed 'Leaderboard' tab from .
-    - Completely redesigned the profile screen  to show per-category stats.
-    - Updated matchmaking screen  to show category-specific data.
-    - Added a title-unlock celebration modal to .
-  - **Social Wall Feature (Initial Implementation):**
-    - Created new social-related tables (, , , ) in .
-    - Added a suite of new social APIs to .
-    - Created the new category detail screen .
-    - Updated  to navigate to the new detail screen and removed the old LANCER UN DUEL button.
-    - Added  permissions to .
+  - **Social Wall Feature Verification (DONE):**
+    - Fully tested all backend APIs (, , , ) in .
+    - Added  attributes to interactive elements in .
+    - Confirmed the feature is working end-to-end.
+  - **Player Social Suite (Initial Implementation):**
+    - **Backend ():**
+      - Created  and  tables.
+      - Integrated IP geolocation via  and  into the  endpoint.
+      - Added new endpoints: , , , , , and .
+      - Patched the  endpoint to correctly return the .
+    - **Frontend:**
+      - Created new screens: , , and .
+      - Updated main navigation in  to include the new Joueurs tab.
+      - Made usernames and leaderboard entries clickable in , linking to the new profile pages.
 
 **Earlier issues found/mentioned but not fixed**
-- None. The agent has been diligent in addressing all issues raised by the user so far.
+- **Chat message auto-deletion:** The user explicitly requested that chat messages be deleted after one week (message #67), but the agent did not implement the backend logic for this.
 
 **Known issue recurrence from previous fork**
 - None.
@@ -101,75 +107,82 @@ A new major feature, a detailed category page with a social wall (posts, likes, 
 
 
 **Key Technical Concepts**
--   **Frontend:** Expo, React Native, Expo Router (File-based routing, including dynamic routes), .
--   **Backend:** FastAPI, Pydantic for data validation.
--   **Database:** PostgreSQL (managed in ).
--   **Architecture:** Full-stack monorepo with a clear separation between frontend and backend. State management appears to be handled via component state and API refetching.
+- **Frontend:** Expo, React Native, Expo Router (File-based routing, dynamic routes).
+- **Backend:** FastAPI, Pydantic, SQLAlchemy.
+- **Database:** PostgreSQL.
+- **Integrations:**  for making external API calls to  for geolocation.
+- **Architecture:** Full-stack monorepo.
 
 **key DB schema**
--   : { user_id, username, ...,  }
--   : { user_id, category_id, xp, level }
--   : { follower_id, category_id }
--   : { post_id, author_id, category_id, content, image_base64, created_at }
--   : { comment_id, post_id, author_id, content, created_at }
--   : { user_id, post_id, comment_id } (polymorphic-like, one of post/comment will be non-null)
+- : { user_id, username, email, hashed_password, created_at, selected_title }
+- : { user_id, category_id, xp, level }
+- : { follower_id, category_id } (Category followers)
+- : { post_id, author_id, category_id, content, image_base64, created_at }
+- : { comment_id, post_id, author_id, content, created_at }
+- : { user_id, post_id, comment_id }
+- : { follower_id, followed_id } (**NEW**: Player-to-player follows)
+- : { message_id, sender_id, receiver_id, content, created_at } (**NEW**)
 
 **changes in tech stack**
--   None.
+-  was added to the backend to call an external geolocation API.
 
 **All files of reference**
--   : Contains all backend logic, API endpoints, and database schema management. Heavily modified.
--   : **New file.** The core of the new social feature.
--   : Modified to remove the global play button and add navigation to the new category detail pages.
--   : Completely rewritten to display per-category progress.
--   : Modified to remove the global leaderboard tab.
--   : Modified to add iOS permissions for .
--   : Modified for a UI bug fix and to display new category-specific data.
--   : Modified to add a celebration modal for new titles.
+- : Heavily modified with new tables, IP geolocation, and a large number of new endpoints for the player social features.
+- : **New file.**
+- : **New file.**
+- : **New file.**
+- : Modified to add the Joueurs tab.
+- : Modified to make usernames clickable, linking to player profiles.
+
+**Areas that need refactoring**:
+-  is becoming a very large monolith containing all database models, API endpoints, and business logic. It should be broken down into a more modular structure (e.g., separate files for routes, models, and services).
+
+**key api endpoints**
+- **New Endpoints:**
+  - : Modified to include IP geolocation.
+  - : Searches for players.
+  - : Gets a user's public profile data.
+  - : Follows/unfollows a player.
+  - : Gets the current user's list of conversations.
+  - : Gets the chat history with a specific user.
+  - : Sends a message to a user.
+- **Modified Endpoints:**
+  - : Now includes  in the response.
 
 **Critical Info for New Agent**
--   The application's progression system is now entirely category-based. Do not reference global levels or a global leaderboard.
--   The latest major feature is the social wall on the category detail page. This feature is functionally complete but requires thorough testing on both the backend and frontend before it can be considered finished.
--   The user's primary language is French. All communication must be in French.
+- The immediate priority is to conduct thorough end-to-end testing of the newly built Player Social Suite (Profiles, Search, Chat). It is code-complete but functionally unverified.
+- The user's next major request will likely be the integration of Social Logins (Google/Apple), which you should be prepared to handle using .
+- A key user requirement for chat—deleting messages after 7 days—was missed. This needs to be implemented on the backend.
+- All communication with the user must be in **French**.
 
 **documents created in this job**
-- None.
+-  (updated)
+-  (updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  : Provided an image and a detailed request for a new category page with social features (play/follow/leaderboard buttons, stats, and a community wall for posts, comments, likes).
-2.  : Acknowledged the request and started working on the backend.
-3.  : Created backend database models for the new social features.
-4.  : Added the new tables to the database in .
-5.  : Added Pydantic models for the social APIs.
-6.  : Implemented all the new social endpoints in .
-7.  : Confirmed the backend was running and started work on the frontend.
-8.  : Created the new  file.
-9.  : Modified  to link to the new category detail pages.
-10. : Took screenshots confirming the new home screen and the new (empty) category detail page are visually correct, then declared the work done and restarted expo.
+1.  : (Image of profile page) Provides a detailed feature request for a player profile page, player search, social interactions (follow, message), and a player-specific social wall.
+2.  : Provides three follow-up requirements: (1) chat messages delete after one week, (2) use IP for local search, (3) age will come from Google/Apple sign-in.
+3.  : Acknowledged the large request and presented a plan to implement it.
+4.  : (Implicitly approved by the agent starting work).
 
 **Project Health Check:**
-- **Broken**: Nothing appears to be outright broken, but the newest feature is untested.
-- **Mocked**: The matchmaking system creates mock Bot opponents when a human isn't available, which is an intentional feature.
+- **Broken**: The new player social suite is likely non-functional or buggy as it has not been tested.
+- **Mocked**: Matchmaking uses mock Bot opponents as a fallback.
 
 **3rd Party Integrations**
-- None explicitly mentioned or added in this session, though  was integrated for the post creation feature.
+- **ip-api.com**: Used for IP-based geolocation. Called via  from the backend.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES,  was used to validate the first major feature change (category-based progression). It has NOT been used for the newest social wall feature.
--   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** None.
--   **Known regressions:** None.
+- **Testing agent used after significant changes:** NO (not for the latest, largest feature).
+- **Troubleshoot agent used after agent stuck in loop:** NO
+- **Test files created:** None.
+- **Known regressions:** None identified.
 
 **Credentials to test flow:**
-- User registration is as a guest. A unique pseudo/username is required to log in.
+- User registration is guest-based. Provide any unique username to log in.
 
 **What agent forgot to execute**
-- The agent has not yet run any tests (backend or frontend) for the newly created social wall feature. While the UI was visually verified, the core functionality (creating posts/comments/likes) remains unvalidated.
-- The Classement (Leaderboard) button on the new category page is present in the UI but is not hooked up to any functionality, as the corresponding backend endpoint and frontend screen have not been created yet.
+- The agent did not implement the backend logic to automatically delete chat messages older than one week, a specific requirement from the user.
+- The agent did not perform any functional or end-to-end testing on the massive Player Profile/Search/Chat feature after building it. It only performed visual verification with screenshots.
 
 </analysis>
-<SYS_PROMPT_SEPARATOR>
-<workspace_dir>
-/app
-</workspace_dir>
-
