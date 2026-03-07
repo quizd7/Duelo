@@ -2541,6 +2541,145 @@ async def health(db: AsyncSession = Depends(get_db)):
         return {"status": "unhealthy", "database": str(e)}
 
 
+# ── Themes Explore (Pillars) ──
+
+PILLARS_DATA = [
+    {
+        "id": "screen", "name": "SCREEN", "label": "Cinéma & Séries", "color": "#8B5CF6",
+        "icon": "🎬", "themes": [
+            {"id": "series_tv", "name": "Séries TV Cultes", "icon": "📺", "playable": True},
+            {"id": "cinema", "name": "Cinéma", "icon": "🎬", "playable": True},
+            {"id": "animation", "name": "Animation", "icon": "🎨", "playable": False},
+        ]
+    },
+    {
+        "id": "sound", "name": "SOUND", "label": "Musique & Audio", "color": "#6366F1",
+        "icon": "🎵", "themes": [
+            {"id": "musique", "name": "Musique", "icon": "🎵", "playable": True},
+            {"id": "rap_hiphop", "name": "Rap & Hip-Hop", "icon": "🎤", "playable": False},
+            {"id": "classique", "name": "Musique Classique", "icon": "🎻", "playable": False},
+        ]
+    },
+    {
+        "id": "lab", "name": "LAB", "label": "Sciences & Espace", "color": "#06B6D4",
+        "icon": "🔬", "themes": [
+            {"id": "sciences", "name": "Sciences", "icon": "🔬", "playable": True},
+            {"id": "espace", "name": "Espace", "icon": "🚀", "playable": False},
+            {"id": "technologie", "name": "Technologie", "icon": "💻", "playable": False},
+        ]
+    },
+    {
+        "id": "arena", "name": "ARENA", "label": "Sports & Gaming", "color": "#84CC16",
+        "icon": "⚽", "themes": [
+            {"id": "sport", "name": "Sport", "icon": "⚽", "playable": True},
+            {"id": "gaming", "name": "🎮 Gaming", "icon": "🎮", "playable": False},
+            {"id": "jeux_olympiques", "name": "Jeux Olympiques", "icon": "🏅", "playable": False},
+        ]
+    },
+    {
+        "id": "legends", "name": "LEGENDS", "label": "Histoire & Mythes", "color": "#F59E0B",
+        "icon": "🏛️", "themes": [
+            {"id": "histoire", "name": "Histoire de France", "icon": "🏛️", "playable": True},
+            {"id": "antiquite", "name": "Antiquité", "icon": "⚔️", "playable": False},
+            {"id": "mythologie", "name": "Mythologie", "icon": "🐉", "playable": False},
+        ]
+    },
+    {
+        "id": "globe", "name": "GLOBE", "label": "Voyage & Géo", "color": "#F97316",
+        "icon": "🌍", "themes": [
+            {"id": "geographie", "name": "Géographie Mondiale", "icon": "🌍", "playable": True},
+            {"id": "capitales", "name": "Capitales du Monde", "icon": "🏙️", "playable": False},
+            {"id": "drapeaux", "name": "Drapeaux", "icon": "🏳️", "playable": False},
+        ]
+    },
+    {
+        "id": "art", "name": "ART", "label": "Mode & Design", "color": "#D946EF",
+        "icon": "🎨", "themes": [
+            {"id": "mode", "name": "Mode", "icon": "👗", "playable": False},
+            {"id": "art_peinture", "name": "Art & Peinture", "icon": "🖼️", "playable": False},
+            {"id": "architecture", "name": "Architecture", "icon": "🏗️", "playable": False},
+        ]
+    },
+    {
+        "id": "mind", "name": "MIND", "label": "Culture & Savoir", "color": "#3B82F6",
+        "icon": "📖", "themes": [
+            {"id": "litterature", "name": "Littérature", "icon": "📚", "playable": False},
+            {"id": "philosophie", "name": "Philosophie", "icon": "🤔", "playable": False},
+            {"id": "langue_fr", "name": "Langue Française", "icon": "🇫🇷", "playable": False},
+        ]
+    },
+    {
+        "id": "life", "name": "LIFE", "label": "Nature & Animaux", "color": "#10B981",
+        "icon": "🌿", "themes": [
+            {"id": "gastronomie", "name": "Gastronomie", "icon": "🍽️", "playable": True},
+            {"id": "animaux", "name": "Animaux", "icon": "🐾", "playable": False},
+            {"id": "nature", "name": "Nature", "icon": "🌳", "playable": False},
+        ]
+    },
+]
+
+@api_router.get("/themes/explore")
+async def themes_explore(user_id: Optional[str] = None, db: AsyncSession = Depends(get_db)):
+    """Return pillar structure with user progress for the themes page."""
+    user = None
+    if user_id:
+        u_res = await db.execute(select(User).where(User.id == user_id))
+        user = u_res.scalar_one_or_none()
+
+    pillars = []
+    for pillar in PILLARS_DATA:
+        themes = []
+        for theme in pillar["themes"]:
+            theme_data = {
+                "id": theme["id"],
+                "name": theme["name"],
+                "icon": theme["icon"],
+                "playable": theme["playable"],
+                "level": 0,
+                "xp": 0,
+                "title": "",
+                "title_lvl50": "",
+                "xp_progress": {"current": 0, "needed": 500, "progress": 0.0},
+                "total_questions": 0,
+            }
+
+            # If playable, get real data
+            xp_field = CATEGORY_XP_FIELD.get(theme["id"])
+            if xp_field:
+                # Question count
+                q_count = await db.execute(
+                    select(func.count(Question.id)).where(Question.category == theme["id"])
+                )
+                theme_data["total_questions"] = q_count.scalar() or 0
+
+                # Lvl 50 title
+                titles = CATEGORY_TITLES.get(theme["id"], {})
+                theme_data["title_lvl50"] = titles.get(50, "Maître Absolu")
+
+                if user:
+                    cat_xp = getattr(user, xp_field, 0)
+                    cat_level = get_category_level(cat_xp)
+                    cat_title = get_category_title(theme["id"], cat_level)
+                    cat_progress = get_xp_progress(cat_xp, cat_level)
+                    theme_data["level"] = cat_level
+                    theme_data["xp"] = cat_xp
+                    theme_data["title"] = cat_title
+                    theme_data["xp_progress"] = cat_progress
+
+            themes.append(theme_data)
+
+        pillars.append({
+            "id": pillar["id"],
+            "name": pillar["name"],
+            "label": pillar["label"],
+            "color": pillar["color"],
+            "icon": pillar["icon"],
+            "themes": themes,
+        })
+
+    return {"pillars": pillars}
+
+
 # ── Admin Dashboard (Desktop Web) ──
 
 @api_router.get("/admin/dashboard", response_class=HTMLResponse)
