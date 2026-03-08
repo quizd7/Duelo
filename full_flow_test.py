@@ -10,7 +10,7 @@ import json
 import time
 
 # Base URL from frontend/.env
-BASE_URL = "https://duelo-mobile.preview.emergentagent.com/api"
+BASE_URL = "https://duelo-expo-test.preview.emergentagent.com/api"
 
 async def full_flow_test():
     """Run the complete test flow as specified in review request."""

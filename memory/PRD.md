@@ -1,121 +1,46 @@
-# Duelo - PRD (Product Requirements Document)
+# Duelo - Product Requirements Document
 
-## Original Problem Statement
-Application mobile quiz "Duelo" inspirée de "Quiz Up". L'app supporte une hiérarchie de données à 3 niveaux : Super Catégorie → Cluster → Thème, avec import de données CSV.
+## Overview
+Duelo is a competitive real-time quiz mobile app built with Expo (React Native) and FastAPI backend with MongoDB.
 
-## Tech Stack
-- **Frontend**: Expo (React Native) avec Expo Router (file-based routing)
-- **Backend**: FastAPI (Python) avec SQLAlchemy ORM
-- **Database**: PostgreSQL (via Supabase)
-- **Data Import**: asyncpg pour bulk COPY CSV → PostgreSQL
+## Core Features
+- Real-time quiz duels between players
+- Theme-based categories (Screen, Arena, Legends, etc.)
+- Player profiles with XP tracking
+- Chat/messaging system
+- Leaderboard
+- Matchmaking system
 
 ## Architecture
-```
-/app
-├── backend/
-│   ├── server.py          # FastAPI + SQLAlchemy models + all API endpoints
-│   └── static/            # Static assets (fond_duelo.webp)
-└── frontend/
-    ├── app/
-    │   ├── _layout.tsx          # Root layout with cosmic background injection
-    │   ├── +html.tsx            # Custom HTML template for web
-    │   ├── index.tsx            # Login / Guest entry
-    │   ├── (tabs)/
-    │   │   ├── _layout.tsx      # Tab Navigator with glass footer
-    │   │   ├── accueil.tsx      # Feed / Activity tab
-    │   │   ├── home.tsx         # "Jouer" tab - Super Categories
-    │   │   ├── themes.tsx       # Themes exploration
-    │   │   ├── players.tsx      # Social / Messages
-    │   │   ├── profile.tsx      # User profile
-    │   │   └── leaderboard.tsx  # Leaderboard
-    │   ├── super-category.tsx   # Super Category detail
-    │   ├── category-detail.tsx  # Theme detail page
-    │   ├── matchmaking.tsx      # Matchmaking screen
-    │   ├── game.tsx             # Quiz gameplay
-    │   ├── results.tsx          # Quiz results
-    │   ├── chat.tsx             # Chat
-    │   ├── search.tsx           # Search
-    │   └── player-profile.tsx   # Player profile view
-    ├── theme/
-    │   └── glassTheme.ts        # Glassmorphism design tokens
-    ├── components/
-    │   ├── DueloHeader.tsx      # Glass header with centered logo
-    │   └── CosmicBackground.tsx # Background component
-    └── assets/
-        ├── images/fond_duelo.webp  # Cosmic stellar background
-        ├── header/                  # Header icons
-        └── tabs/                    # Tab bar icons
-```
+- **Frontend**: Expo (React Native) with Expo Router
+- **Backend**: FastAPI (Python)
+- **Database**: MongoDB
+- **Platform**: Cross-platform (iOS, Android, Web)
 
-## Key Features Implemented
+## Completed Work
 
-### Phase 1: Core Quiz Infrastructure
-- Hierarchical data model: Super Category → Cluster → Theme
-- Bulk CSV import (~30k questions, 60 themes for SCREEN)
-- Quiz logic: 7 questions (2 Easy, 3 Medium, 2 Hard, unique angles)
-- Guest login with username
-- Full gameplay flow: matchmaking → quiz → results
+### Session 1 - Bug Fixes
+- Fixed page overlap bug on web preview (disabled stack animations)
+- Fixed cosmic background not appearing on all pages
+- Fixed background being overly zoomed on web
+- Fixed profile page crash on Expo Go (null safety with optional chaining)
+- Created platform-aware CosmicBackground component
 
-### Phase 2: Glassmorphism Néon-Cristal Design (Current)
-- **Cosmic stellar background**: Fixed background on ALL pages via CSS injection
-- **Frosted glass header**: Dark semi-opaque bar with cyan neon bottom border
-- **Frosted glass footer**: Dark semi-opaque bar with cyan neon top border
-- **Glass containers**: All cards/panels use dark frosted glass with neon borders
-- **Neon-crystal borders**: Uniform cyan neon borders on all UI elements
-- **White text**: High-visibility sans-serif labels throughout
-- **Footer correction**: "MESSAGE" label (not "Massage" or "Social")
-- **Uniform border-radius**: 16px on all panels
-- **Design tokens**: Centralized in `/theme/glassTheme.ts`
+### Session 2 - Icon Updates (March 2026)
+- Replaced all tab bar (footer) icons with custom game-themed .webp images:
+  - Accueil: Castle icon (Home_icon.webp)
+  - MESSAGE: Heart with people icon (Social_icon.webp)
+  - Jouer: Crossed swords icon (Play_icon.webp)
+  - Thèmes: Cards with lightning icon (Themes_icon.webp)
+  - Profil: Person silhouette icon (Profile_icon.webp)
 
-## Design Tokens (glassTheme.ts)
-- Glass BG: `rgba(8, 8, 24, 0.65)`
-- Glass BG Dark: `rgba(5, 5, 18, 0.75)`
-- Glass BG Light: `rgba(15, 15, 40, 0.55)`
-- Neon Cyan Border: `rgba(0, 255, 255, 0.25)`
-- Neon Bright Border: `rgba(0, 255, 255, 0.45)`
-- Border Radius: 16px (uniform)
-- Text Primary: #FFFFFF
-- Text Secondary: rgba(255, 255, 255, 0.7)
+## Key Files
+- `frontend/app/(tabs)/_layout.tsx` - Tab navigator with custom icons
+- `frontend/app/_layout.tsx` - Root stack navigator
+- `frontend/components/CosmicBackground.tsx` - Background component
+- `frontend/assets/tabs/` - Custom tab icon images (.webp)
+- `backend/server.py` - FastAPI backend
 
-## Key API Endpoints
-- `POST /api/auth/register-guest` - Guest login
-- `GET /api/explore/super-categories` - List super categories
-- `GET /api/themes/explore` - Hierarchical theme data
-- `GET /api/theme/{theme_id}` - Theme detail
-- `GET /api/game/questions-v2?theme_id={id}` - Quiz questions
-- `POST /api/game/submit-v2` - Submit quiz results
-- `GET /api/profile-v2/{user_id}` - User profile
-- `GET /api/static/fond_duelo.webp` - Serve cosmic background image
-
-## Prioritized Backlog
-
-### P0 - Import Remaining Data
-- Import CSV data for other super categories (SOUND, ARENA, LEGENDS, LAB, etc.)
-- Waiting for user to provide CSV files
-
-### P1 - Theme Icons
-- Integrate URL_Icone from CSV for theme icons
-- Replace placeholder initials with actual icon images
-- Waiting for user to provide icon URLs
-
-### P2 - Follow & Leaderboard
-- Implement "Follow" functionality on theme detail page
-- Implement theme-specific leaderboards
-- Backend + frontend logic
-
-### P3 - Social Features
-- Real-time chat improvements
-- Push notifications
-- Friend system
-
-### P4 - Advanced Features
-- Auth Google/Apple
-- Player filters (age, distance)
-- Video support in posts
-- Deep Links
-- WebSocket matchmaking
-- Seasons system
-
-### P5 - Refactoring
-- Split server.py into modules (routes, models, etc.)
-- Clean legacy category code from category-detail.tsx
+## Backlog
+- P2: Review redundancy of accueil.tsx vs home.tsx in tabs
+- P3: General code refactoring

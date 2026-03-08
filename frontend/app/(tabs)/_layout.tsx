@@ -4,11 +4,11 @@ import { GLASS } from '../../theme/glassTheme';
 
 // Tab icon assets
 const TAB_ICONS = {
-  home: require('../../assets/tabs/home.png'),
-  social: require('../../assets/tabs/social.png'),
-  play: require('../../assets/tabs/play.png'),
-  themes: require('../../assets/tabs/themes.png'),
-  profile: require('../../assets/tabs/profile.png'),
+  home: require('../../assets/tabs/home.webp'),
+  social: require('../../assets/tabs/social.webp'),
+  play: require('../../assets/tabs/play.webp'),
+  themes: require('../../assets/tabs/themes.webp'),
+  profile: require('../../assets/tabs/profile.webp'),
 };
 
 function TabIcon({ label, focused, iconSource }: { label: string; focused: boolean; iconSource: any }) {
