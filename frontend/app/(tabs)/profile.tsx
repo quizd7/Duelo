@@ -79,7 +79,7 @@ export default function ProfileScreen() {
     try {
       const res = await fetch(`${API_URL}/api/user/select-title`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: profile.user.id, title }),
+        body: JSON.stringify({ user_id: profile?.user?.id, title }),
       });
       if (res.ok) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -98,7 +98,7 @@ export default function ProfileScreen() {
   if (loading) {
     return <CosmicBackground><View style={s.loadingContainer}><ActivityIndicator size="large" color="#8A2BE2" /></View></CosmicBackground>;
   }
-  if (!profile) {
+  if (!profile || !profile.user) {
     return (
       <CosmicBackground>
         <SafeAreaView style={s.container}>
@@ -114,7 +114,7 @@ export default function ProfileScreen() {
   }
 
   const { user, themes, all_unlocked_titles, match_history } = profile;
-  const displayTitle = user.selected_title || (all_unlocked_titles && all_unlocked_titles.length > 0 ? all_unlocked_titles[0].title : '');
+  const displayTitle = user?.selected_title || (all_unlocked_titles && all_unlocked_titles.length > 0 ? all_unlocked_titles[0]?.title : '') || '';
 
   return (
     <CosmicBackground>
@@ -126,11 +126,11 @@ export default function ProfileScreen() {
         <View style={s.profileHeader}>
           <View style={s.avatarContainer}>
             <View style={s.avatar}>
-              <Text style={s.avatarText}>{user.pseudo[0]?.toUpperCase()}</Text>
+              <Text style={s.avatarText}>{user?.pseudo?.[0]?.toUpperCase() || '?'}</Text>
             </View>
           </View>
           <View style={s.profileInfo}>
-            <Text style={s.pseudo}>{user.pseudo}</Text>
+            <Text style={s.pseudo}>{user?.pseudo || 'Joueur'}</Text>
             {displayTitle ? (
               <TouchableOpacity style={s.titleBadge} onPress={() => setShowTitleModal(true)}>
                 <Text style={s.titleText}>{displayTitle}</Text>
@@ -142,10 +142,10 @@ export default function ProfileScreen() {
                 <Text style={s.titleEditIcon}> ✎</Text>
               </TouchableOpacity>
             )}
-            {user.country ? (
+            {user?.country ? (
               <View style={s.locationRow}>
-                <Text style={s.locationFlag}>{user.country_flag}</Text>
-                <Text style={s.locationText}>{user.country}</Text>
+                <Text style={s.locationFlag}>{user?.country_flag}</Text>
+                <Text style={s.locationText}>{user?.country}</Text>
               </View>
             ) : (
               <View style={s.locationRow}>
@@ -159,17 +159,17 @@ export default function ProfileScreen() {
         {/* ── Stats Row ── */}
         <View style={s.statsRow}>
           <View style={s.statItem}>
-            <Text style={s.statValue}>{user.matches_played}</Text>
+            <Text style={s.statValue}>{user?.matches_played || 0}</Text>
             <Text style={s.statLabel}>PARTIES</Text>
           </View>
           <View style={s.statDivider} />
           <View style={s.statItem}>
-            <Text style={s.statValue}>{user.followers_count}</Text>
+            <Text style={s.statValue}>{user?.followers_count || 0}</Text>
             <Text style={s.statLabel}>ABONNÉS</Text>
           </View>
           <View style={s.statDivider} />
           <View style={s.statItem}>
-            <Text style={s.statValue}>{user.following_count}</Text>
+            <Text style={s.statValue}>{user?.following_count || 0}</Text>
             <Text style={s.statLabel}>ABONNEMENTS</Text>
           </View>
         </View>
@@ -213,19 +213,19 @@ export default function ProfileScreen() {
         <Text style={s.sectionTitle}>STATISTIQUES</Text>
         <View style={s.quickStats}>
           <View style={s.qStatBox}>
-            <Text style={[s.qStatVal, { color: '#00FF9D' }]}>{user.matches_won}</Text>
+            <Text style={[s.qStatVal, { color: '#00FF9D' }]}>{user?.matches_won || 0}</Text>
             <Text style={s.qStatLbl}>Victoires</Text>
           </View>
           <View style={s.qStatBox}>
-            <Text style={s.qStatVal}>{user.win_rate}%</Text>
+            <Text style={s.qStatVal}>{user?.win_rate || 0}%</Text>
             <Text style={s.qStatLbl}>Win Rate</Text>
           </View>
           <View style={s.qStatBox}>
-            <Text style={[s.qStatVal, { color: '#FFD700' }]}>{user.best_streak}</Text>
+            <Text style={[s.qStatVal, { color: '#FFD700' }]}>{user?.best_streak || 0}</Text>
             <Text style={s.qStatLbl}>Best Streak</Text>
           </View>
           <View style={s.qStatBox}>
-            <Text style={[s.qStatVal, { color: '#00FFFF' }]}>{(user.total_xp || 0).toLocaleString()}</Text>
+            <Text style={[s.qStatVal, { color: '#00FFFF' }]}>{(user?.total_xp || 0).toLocaleString()}</Text>
             <Text style={s.qStatLbl}>XP Total</Text>
           </View>
         </View>
@@ -236,7 +236,7 @@ export default function ProfileScreen() {
             <Text style={s.sectionTitle}>MES TITRES</Text>
             <View style={s.titlesWrap}>
               {all_unlocked_titles.map((t, i) => {
-                const isSelected = user.selected_title === t.title;
+                const isSelected = user?.selected_title === t.title;
                 return (
                   <TouchableOpacity
                     key={`${t.theme_id}-${t.level}`}
@@ -332,7 +332,7 @@ export default function ProfileScreen() {
             ) : (
               <ScrollView style={s.modalScroll}>
                 {all_unlocked_titles.map((t) => {
-                  const isSelected = user.selected_title === t.title;
+                  const isSelected = user?.selected_title === t.title;
                   return (
                     <TouchableOpacity
                       key={`${t.theme_id}-${t.level}`}
