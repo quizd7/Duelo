@@ -36,7 +36,7 @@ type PlayerData = {
 
 export default function MatchmakingScreen() {
   const router = useRouter();
-  const { category } = useLocalSearchParams<{ category: string }>();
+  const { category, themeName } = useLocalSearchParams<{ category: string; themeName: string }>();
   const [message, setMessage] = useState(SEARCH_MESSAGES[0]);
   const [dots, setDots] = useState('');
   const [phase, setPhase] = useState<'searching' | 'versus'>('searching');
@@ -127,10 +127,10 @@ export default function MatchmakingScreen() {
   const fetchOpponent = async () => {
     try {
       const userId = await AsyncStorage.getItem('duelo_user_id');
-      const res = await fetch(`${API_URL}/api/game/matchmaking`, {
+      const res = await fetch(`${API_URL}/api/game/matchmaking-v2`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category, player_id: userId }),
+        body: JSON.stringify({ theme_id: category, player_id: userId }),
       });
       const data = await res.json();
       setOpponent(data.opponent);
@@ -178,9 +178,8 @@ export default function MatchmakingScreen() {
   const spin = radarAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
   const getCategoryLabel = () => {
-    if (category === 'series_tv') return '📺 Séries TV';
-    if (category === 'geographie') return '🌍 Géographie';
-    return '🏛️ Histoire';
+    const name = themeName ? decodeURIComponent(themeName) : category;
+    return name || 'Quiz';
   };
 
   // ── VERSUS SCREEN ──

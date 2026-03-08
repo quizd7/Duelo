@@ -78,7 +78,7 @@ class Question(Base):
     created_at = Column(DateTime(timezone=True), default=utc_now)
 
     __table_args__ = (
-        UniqueConstraint('question_text', name='uq_question_text'),
+        # Removed UniqueConstraint on question_text to allow same text across themes
     )
 
 
@@ -205,3 +205,37 @@ class NotificationSettings(Base):
     comments = Column(Boolean, default=True)
     system = Column(Boolean, default=True)
     updated_at = Column(DateTime(timezone=True), default=utc_now)
+
+
+# ── New Hierarchical Theme System ──
+
+class Theme(Base):
+    __tablename__ = 'themes'
+
+    id = Column(String(20), primary_key=True)  # e.g. "STV_BBAD"
+    super_category = Column(String(50), nullable=False, index=True)  # e.g. "SCREEN"
+    cluster = Column(String(100), nullable=False, index=True)  # e.g. "Séries TV"
+    name = Column(String(200), nullable=False)  # e.g. "Breaking Bad"
+    description = Column(Text, nullable=True)
+    color_hex = Column(String(10), nullable=True)
+    title_lv1 = Column(String(100), nullable=True)
+    title_lv10 = Column(String(100), nullable=True)
+    title_lv20 = Column(String(100), nullable=True)
+    title_lv35 = Column(String(100), nullable=True)
+    title_lv50 = Column(String(100), nullable=True)
+    icon_url = Column(Text, nullable=True)
+    question_count = Column(Integer, default=0)
+    created_at = Column(DateTime(timezone=True), default=utc_now)
+
+
+class UserThemeXP(Base):
+    __tablename__ = 'user_theme_xp'
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), nullable=False, index=True)
+    theme_id = Column(String(20), nullable=False, index=True)
+    xp = Column(Integer, default=0)
+
+    __table_args__ = (
+        UniqueConstraint('user_id', 'theme_id', name='uq_user_theme_xp'),
+    )

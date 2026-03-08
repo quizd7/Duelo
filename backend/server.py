@@ -15,7 +15,9 @@ from datetime import datetime, timezone, timedelta
 from sqlalchemy import select, func, text, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
-from models import User, Question, Match, CategoryFollow, WallPost, PostLike, PostComment, PlayerFollow, ChatMessage, Notification, NotificationSettings, generate_uuid
+from models import User, Question, Match, CategoryFollow, WallPost, PostLike, PostComment, PlayerFollow, ChatMessage, Notification, NotificationSettings, Theme, UserThemeXP, generate_uuid
+import csv
+import io
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -2902,6 +2904,774 @@ async def social_coach(user_id: str, db: AsyncSession = Depends(get_db)):
 async def admin_dashboard():
     html_path = ROOT_DIR / "admin_dashboard.html"
     return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
+
+
+# ══════════════════════════════════════════════════════════════
+# ── NEW THEME HIERARCHY SYSTEM ──
+# Super Category → Cluster (3) → Theme (20) → Questions (~500)
+# ══════════════════════════════════════════════════════════════
+
+# ── Default icon emojis for super categories ──
+SUPER_CATEGORY_META = {
+    "SCREEN": {"icon": "🎬", "color": "#8A2BE2", "label": "Screen"},
+    "SOUND": {"icon": "🎵", "color": "#FF6B35", "label": "Sound"},
+    "ARENA": {"icon": "⚽", "color": "#00FF9D", "label": "Arena"},
+    "LEGENDS": {"icon": "🏛️", "color": "#FFD700", "label": "Legends"},
+    "LAB": {"icon": "🔬", "color": "#00FFFF", "label": "Lab"},
+    "TASTE": {"icon": "🍽️", "color": "#FF69B4", "label": "Taste"},
+    "GLOBE": {"icon": "🌍", "color": "#4ECDC4", "label": "Globe"},
+    "PIXEL": {"icon": "🎮", "color": "#FF3B5C", "label": "Pixel"},
+    "STYLE": {"icon": "✨", "color": "#E040FB", "label": "Style"},
+}
+
+# ── Default cluster emojis ──
+CLUSTER_ICONS = {
+    "Séries TV": "📺",
+    "Cinéma": "🎬",
+    "Animation & Anime": "🎌",
+    "Rock & Pop": "🎸",
+    "Rap & Hip-Hop": "🎤",
+    "Classique & Jazz": "🎻",
+    "Football": "⚽",
+    "Sports US": "🏈",
+    "Sports Individuels": "🎾",
+    "Histoire": "🏛️",
+    "Mythologie": "⚡",
+    "Personnalités": "👑",
+    "Sciences": "🔬",
+    "Technologie": "💻",
+    "Nature": "🌿",
+}
+
+
+def get_theme_title(theme, level: int) -> str:
+    """Get highest unlocked title for a theme at given level."""
+    titles = {1: theme.title_lv1, 10: theme.title_lv10, 20: theme.title_lv20, 35: theme.title_lv35, 50: theme.title_lv50}
+    current = ""
+    for threshold in TITLE_THRESHOLDS:
+        if level >= threshold and titles.get(threshold):
+            current = titles[threshold]
+    return current
+
+
+def get_theme_unlocked_titles(theme, level: int) -> list:
+    """Get all unlocked titles for a theme at given level."""
+    titles = {1: theme.title_lv1, 10: theme.title_lv10, 20: theme.title_lv20, 35: theme.title_lv35, 50: theme.title_lv50}
+    unlocked = []
+    for threshold in TITLE_THRESHOLDS:
+        if level >= threshold and titles.get(threshold):
+            unlocked.append({"level": threshold, "title": titles[threshold]})
+    return unlocked
+
+
+# ── Import CSV Endpoint ──
+
+@api_router.post("/admin/import-csv")
+async def import_csv_data(request: Request, db: AsyncSession = Depends(get_db)):
+    """Import themes and questions from CSV data.
+    Expects JSON body: { themes_csv: str, questions_csv: str }
+    """
+    body = await request.json()
+    themes_csv_text = body.get("themes_csv", "")
+    questions_csv_text = body.get("questions_csv", "")
+
+    if not themes_csv_text or not questions_csv_text:
+        raise HTTPException(status_code=400, detail="Both themes_csv and questions_csv required")
+
+    # ── Parse and import themes ──
+    themes_reader = csv.DictReader(io.StringIO(themes_csv_text))
+    themes_imported = 0
+    for row in themes_reader:
+        theme_id = row.get("ID_Theme", "").strip()
+        if not theme_id:
+            continue
+
+        # Check if theme already exists
+        existing = await db.execute(select(Theme).where(Theme.id == theme_id))
+        if existing.scalar_one_or_none():
+            # Update existing
+            await db.execute(
+                text("""UPDATE themes SET super_category=:sc, cluster=:cl, name=:nm, description=:desc,
+                         color_hex=:ch, title_lv1=:t1, title_lv10=:t10, title_lv20=:t20,
+                         title_lv35=:t35, title_lv50=:t50, icon_url=:iu
+                         WHERE id=:id"""),
+                {
+                    "id": theme_id, "sc": row.get("Super_Categorie", "").strip(),
+                    "cl": row.get("Cluster", "").strip(), "nm": row.get("Nom_Public", "").strip(),
+                    "desc": row.get("Description", "").strip(), "ch": row.get("Couleur_Hex", "").strip(),
+                    "t1": row.get("Titre_Niv_1", "").strip(), "t10": row.get("Titre_Niv_10", "").strip(),
+                    "t20": row.get("Titre_Niv_20", "").strip(), "t35": row.get("Titre_Niv_35", "").strip(),
+                    "t50": row.get("Titre_Niv_50", "").strip(), "iu": row.get("URL_Icone", "").strip(),
+                }
+            )
+        else:
+            theme = Theme(
+                id=theme_id,
+                super_category=row.get("Super_Categorie", "").strip(),
+                cluster=row.get("Cluster", "").strip(),
+                name=row.get("Nom_Public", "").strip(),
+                description=row.get("Description", "").strip(),
+                color_hex=row.get("Couleur_Hex", "").strip(),
+                title_lv1=row.get("Titre_Niv_1", "").strip(),
+                title_lv10=row.get("Titre_Niv_10", "").strip(),
+                title_lv20=row.get("Titre_Niv_20", "").strip(),
+                title_lv35=row.get("Titre_Niv_35", "").strip(),
+                title_lv50=row.get("Titre_Niv_50", "").strip(),
+                icon_url=row.get("URL_Icone", "").strip(),
+            )
+            db.add(theme)
+        themes_imported += 1
+
+    await db.commit()
+
+    # ── Parse and import questions ──
+    ANSWER_MAP = {"A": 0, "B": 1, "C": 2, "D": 3}
+    questions_reader = csv.DictReader(io.StringIO(questions_csv_text))
+    questions_imported = 0
+    batch = []
+
+    for row in questions_reader:
+        q_id = row.get("ID", "").strip()
+        theme_id = row.get("Catégorie", row.get("Categorie", "")).strip()
+        question_text = row.get("Question", "").strip()
+        if not q_id or not question_text:
+            continue
+
+        rep_a = row.get("Rep A", "").strip()
+        rep_b = row.get(" Rep B", row.get("Rep B", "")).strip()
+        rep_c = row.get("Rep C", "").strip()
+        rep_d = row.get("Rep D", "").strip()
+        bonne_rep = row.get("Bonne rep", "").strip().upper()
+        difficulte = row.get("Difficulté", row.get("Difficulte", "")).strip()
+        angle = row.get("Angle", "").strip()
+        angle_num_str = row.get("Angle Num", "").strip()
+
+        correct_option = ANSWER_MAP.get(bonne_rep, 0)
+        options = [rep_a, rep_b, rep_c, rep_d]
+
+        try:
+            angle_num = int(angle_num_str)
+        except (ValueError, TypeError):
+            angle_num = 0
+
+        # Check for existing question
+        existing_q = await db.execute(select(Question).where(Question.id == q_id))
+        if existing_q.scalar_one_or_none():
+            continue  # Skip duplicates
+
+        q = Question(
+            id=q_id,
+            category=theme_id,
+            question_text=question_text,
+            options=options,
+            correct_option=correct_option,
+            difficulty=difficulte,
+        )
+        db.add(q)
+        questions_imported += 1
+
+        # Commit in batches of 500
+        if questions_imported % 500 == 0:
+            await db.commit()
+
+    await db.commit()
+
+    # ── Update question counts per theme ──
+    result = await db.execute(select(Theme))
+    themes_list = result.scalars().all()
+    for t in themes_list:
+        count_res = await db.execute(
+            select(func.count(Question.id)).where(Question.category == t.id)
+        )
+        t.question_count = count_res.scalar() or 0
+    await db.commit()
+
+    # Also update angle/angle_num columns for questions that don't have them yet
+    # We need to do this via raw SQL since the ORM model doesn't have these columns
+    questions_reader2 = csv.DictReader(io.StringIO(questions_csv_text))
+    for row in questions_reader2:
+        q_id = row.get("ID", "").strip()
+        angle = row.get("Angle", "").strip()
+        angle_num_str = row.get("Angle Num", "").strip()
+        if q_id and angle:
+            try:
+                angle_num = int(angle_num_str) if angle_num_str else 0
+                await db.execute(
+                    text("UPDATE questions SET angle=:angle, angle_num=:anum WHERE id=:qid"),
+                    {"angle": angle, "anum": angle_num, "qid": q_id}
+                )
+            except:
+                pass
+    await db.commit()
+
+    return {
+        "success": True,
+        "themes_imported": themes_imported,
+        "questions_imported": questions_imported,
+    }
+
+
+# ── Explore: Super Categories & Clusters ──
+
+@api_router.get("/explore/super-categories")
+async def get_super_categories(db: AsyncSession = Depends(get_db)):
+    """Return all super categories with their clusters and theme counts."""
+    result = await db.execute(
+        select(Theme.super_category, Theme.cluster, func.count(Theme.id).label("theme_count"))
+        .group_by(Theme.super_category, Theme.cluster)
+        .order_by(Theme.super_category, Theme.cluster)
+    )
+    rows = result.all()
+
+    super_cats = {}
+    for sc, cluster, count in rows:
+        if sc not in super_cats:
+            meta = SUPER_CATEGORY_META.get(sc, {"icon": "❓", "color": "#8A2BE2", "label": sc})
+            super_cats[sc] = {
+                "id": sc,
+                "label": meta["label"],
+                "icon": meta["icon"],
+                "color": meta["color"],
+                "clusters": [],
+                "total_themes": 0,
+            }
+        cluster_icon = CLUSTER_ICONS.get(cluster, "📁")
+        super_cats[sc]["clusters"].append({
+            "name": cluster,
+            "icon": cluster_icon,
+            "theme_count": count,
+        })
+        super_cats[sc]["total_themes"] += count
+
+    return list(super_cats.values())
+
+
+@api_router.get("/explore/{super_category}/clusters")
+async def get_clusters(super_category: str, user_id: Optional[str] = None, db: AsyncSession = Depends(get_db)):
+    """Return clusters for a super category with their themes."""
+    result = await db.execute(
+        select(Theme)
+        .where(Theme.super_category == super_category.upper())
+        .order_by(Theme.cluster, Theme.name)
+    )
+    themes = result.scalars().all()
+
+    if not themes:
+        raise HTTPException(status_code=404, detail="Super catégorie introuvable")
+
+    # Get user XP if provided
+    user_xp_map = {}
+    if user_id:
+        xp_result = await db.execute(
+            select(UserThemeXP).where(UserThemeXP.user_id == user_id)
+        )
+        for uxp in xp_result.scalars().all():
+            user_xp_map[uxp.theme_id] = uxp.xp
+
+    clusters = {}
+    for t in themes:
+        if t.cluster not in clusters:
+            clusters[t.cluster] = {
+                "name": t.cluster,
+                "icon": CLUSTER_ICONS.get(t.cluster, "📁"),
+                "themes": [],
+            }
+
+        theme_xp = user_xp_map.get(t.id, 0)
+        theme_level = get_category_level(theme_xp)
+
+        clusters[t.cluster]["themes"].append({
+            "id": t.id,
+            "name": t.name,
+            "description": t.description or "",
+            "icon_url": t.icon_url or "",
+            "color_hex": t.color_hex or "#8A2BE2",
+            "question_count": t.question_count or 0,
+            "user_level": theme_level,
+            "user_title": get_theme_title(t, theme_level) if theme_level > 0 else "",
+        })
+
+    meta = SUPER_CATEGORY_META.get(super_category.upper(), {"icon": "❓", "color": "#8A2BE2", "label": super_category})
+    return {
+        "super_category": super_category.upper(),
+        "label": meta["label"],
+        "icon": meta["icon"],
+        "color": meta["color"],
+        "clusters": list(clusters.values()),
+    }
+
+
+# ── Theme Detail ──
+
+@api_router.get("/theme/{theme_id}/detail")
+async def get_theme_detail(theme_id: str, user_id: Optional[str] = None, db: AsyncSession = Depends(get_db)):
+    """Full theme detail with user-specific data."""
+    result = await db.execute(select(Theme).where(Theme.id == theme_id))
+    theme = result.scalar_one_or_none()
+    if not theme:
+        raise HTTPException(status_code=404, detail="Thème introuvable")
+
+    # User data
+    user_xp = 0
+    user_level = 0
+    user_title = ""
+    is_following = False
+
+    if user_id:
+        xp_result = await db.execute(
+            select(UserThemeXP).where(UserThemeXP.user_id == user_id, UserThemeXP.theme_id == theme_id)
+        )
+        uxp = xp_result.scalar_one_or_none()
+        if uxp:
+            user_xp = uxp.xp
+            user_level = get_category_level(user_xp)
+            user_title = get_theme_title(theme, user_level)
+
+        # Check follow
+        follow_check = await db.execute(
+            select(CategoryFollow).where(
+                CategoryFollow.user_id == user_id,
+                CategoryFollow.category_id == theme_id
+            )
+        )
+        is_following = follow_check.scalar_one_or_none() is not None
+
+    # Followers count
+    f_count = await db.execute(
+        select(func.count(CategoryFollow.id)).where(CategoryFollow.category_id == theme_id)
+    )
+    followers_count = f_count.scalar() or 0
+
+    xp_progress = get_xp_progress(user_xp, user_level)
+    unlocked_titles = get_theme_unlocked_titles(theme, user_level)
+
+    return {
+        "id": theme.id,
+        "name": theme.name,
+        "description": theme.description or "",
+        "super_category": theme.super_category,
+        "cluster": theme.cluster,
+        "color_hex": theme.color_hex or "#8A2BE2",
+        "icon_url": theme.icon_url or "",
+        "question_count": theme.question_count or 0,
+        "followers_count": followers_count,
+        "user_level": user_level,
+        "user_title": user_title,
+        "user_xp": user_xp,
+        "xp_progress": xp_progress,
+        "is_following": is_following,
+        "unlocked_titles": unlocked_titles,
+        "all_titles": {
+            1: theme.title_lv1 or "",
+            10: theme.title_lv10 or "",
+            20: theme.title_lv20 or "",
+            35: theme.title_lv35 or "",
+            50: theme.title_lv50 or "",
+        },
+    }
+
+
+# ── Theme Leaderboard ──
+
+@api_router.get("/theme/{theme_id}/leaderboard")
+async def theme_leaderboard(theme_id: str, limit: int = 20, db: AsyncSession = Depends(get_db)):
+    """Per-theme leaderboard based on UserThemeXP."""
+    result = await db.execute(
+        select(UserThemeXP)
+        .where(UserThemeXP.theme_id == theme_id, UserThemeXP.xp > 0)
+        .order_by(UserThemeXP.xp.desc())
+        .limit(limit)
+    )
+    entries_xp = result.scalars().all()
+
+    # Get theme for title resolution
+    theme_res = await db.execute(select(Theme).where(Theme.id == theme_id))
+    theme = theme_res.scalar_one_or_none()
+
+    entries = []
+    for i, uxp in enumerate(entries_xp):
+        user_res = await db.execute(select(User).where(User.id == uxp.user_id))
+        user = user_res.scalar_one_or_none()
+        if not user:
+            continue
+        lvl = get_category_level(uxp.xp)
+        entries.append({
+            "id": user.id,
+            "rank": i + 1,
+            "pseudo": user.pseudo,
+            "avatar_seed": user.avatar_seed,
+            "level": lvl,
+            "title": get_theme_title(theme, lvl) if theme else "",
+            "xp": uxp.xp,
+        })
+    return entries
+
+
+# ── Game Questions V2 (with difficulty & angle distribution) ──
+
+@api_router.get("/game/questions-v2")
+async def get_game_questions_v2(theme: str, db: AsyncSession = Depends(get_db)):
+    """Get 7 questions: 2 Facile + 3 Moyen + 2 Difficile, all from different angles.
+    Falls back to random selection if not enough variety."""
+
+    # Try smart selection: 2F + 3M + 2D with unique angles
+    selected = []
+    used_angles = set()
+
+    for difficulty, count in [("Facile", 2), ("Moyen", 3), ("Difficile", 2)]:
+        result = await db.execute(
+            select(Question)
+            .where(Question.category == theme, Question.difficulty == difficulty)
+            .order_by(func.random())
+        )
+        candidates = result.scalars().all()
+
+        added = 0
+        for q in candidates:
+            # Get angle_num from raw SQL since it's an extra column
+            angle_res = await db.execute(
+                text("SELECT angle_num FROM questions WHERE id = :qid"),
+                {"qid": q.id}
+            )
+            angle_row = angle_res.first()
+            q_angle = angle_row[0] if angle_row and angle_row[0] else 0
+
+            if q_angle not in used_angles or q_angle == 0:
+                selected.append(q)
+                if q_angle and q_angle > 0:
+                    used_angles.add(q_angle)
+                added += 1
+                if added >= count:
+                    break
+
+        # If not enough, fill with any remaining
+        if added < count:
+            for q in candidates:
+                if q not in selected:
+                    selected.append(q)
+                    added += 1
+                    if added >= count:
+                        break
+
+    # If still not enough (< 7), fill with random from theme
+    if len(selected) < 7:
+        result = await db.execute(
+            select(Question)
+            .where(Question.category == theme)
+            .order_by(func.random())
+            .limit(7)
+        )
+        fallback = result.scalars().all()
+        for q in fallback:
+            if q not in selected and len(selected) < 7:
+                selected.append(q)
+
+    # Shuffle the final selection
+    random.shuffle(selected)
+
+    return [
+        {
+            "id": q.id,
+            "category": q.category,
+            "question_text": q.question_text,
+            "options": q.options,
+            "correct_option": q.correct_option,
+            "difficulty": q.difficulty,
+        }
+        for q in selected
+    ]
+
+
+# ── Theme Matchmaking ──
+
+@api_router.post("/game/matchmaking-v2")
+async def start_matchmaking_v2(request: Request, db: AsyncSession = Depends(get_db)):
+    """Matchmaking using theme_id instead of old category."""
+    body = await request.json()
+    theme_id = body.get("theme_id", "")
+    player_id = body.get("player_id")
+
+    # Get theme info
+    theme_res = await db.execute(select(Theme).where(Theme.id == theme_id))
+    theme = theme_res.scalar_one_or_none()
+    if not theme:
+        raise HTTPException(status_code=404, detail="Thème introuvable")
+
+    player_level = 0
+    player_title = ""
+
+    if player_id:
+        xp_res = await db.execute(
+            select(UserThemeXP).where(UserThemeXP.user_id == player_id, UserThemeXP.theme_id == theme_id)
+        )
+        uxp = xp_res.scalar_one_or_none()
+        if uxp:
+            player_level = get_category_level(uxp.xp)
+            player_title = get_theme_title(theme, player_level)
+
+    # Bot with similar level
+    bot_level = max(0, min(MAX_LEVEL, player_level + random.randint(-5, 5)))
+    bot_name = random.choice(BOT_NAMES)
+    bot_seed = secrets.token_hex(4)
+    bot_title = get_theme_title(theme, bot_level)
+    bot_streak = random.choice([0, 0, 0, 1, 2, 3, 4, 5])
+
+    return {
+        "theme": {
+            "id": theme.id,
+            "name": theme.name,
+            "color_hex": theme.color_hex or "#8A2BE2",
+            "icon_url": theme.icon_url or "",
+        },
+        "player": {
+            "level": player_level,
+            "title": player_title,
+        },
+        "opponent": {
+            "pseudo": bot_name,
+            "avatar_seed": bot_seed,
+            "is_bot": True,
+            "level": bot_level,
+            "title": bot_title,
+            "streak": bot_streak,
+            "streak_badge": get_streak_badge(bot_streak),
+        },
+    }
+
+
+# ── Theme Match Submit ──
+
+@api_router.post("/game/submit-v2")
+async def submit_match_v2(request: Request, db: AsyncSession = Depends(get_db)):
+    """Submit match result using theme_id. XP tracked in UserThemeXP."""
+    body = await request.json()
+    player_id = body.get("player_id")
+    theme_id = body.get("theme_id")
+    player_score = body.get("player_score", 0)
+    opponent_score = body.get("opponent_score", 0)
+    opponent_pseudo = body.get("opponent_pseudo", "Bot")
+    opponent_is_bot = body.get("opponent_is_bot", True)
+    correct_count = body.get("correct_count", 0)
+    opponent_level = body.get("opponent_level", 1)
+    questions_data = body.get("questions_data")
+
+    if not player_id or not theme_id:
+        raise HTTPException(status_code=400, detail="player_id and theme_id required")
+
+    # Get theme
+    theme_res = await db.execute(select(Theme).where(Theme.id == theme_id))
+    theme = theme_res.scalar_one_or_none()
+    if not theme:
+        raise HTTPException(status_code=404, detail="Thème introuvable")
+
+    # Get user
+    result = await db.execute(select(User).where(User.id == player_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+
+    won = player_score > opponent_score
+    perfect = correct_count == TOTAL_QUESTIONS
+
+    # Get/create UserThemeXP
+    xp_res = await db.execute(
+        select(UserThemeXP).where(UserThemeXP.user_id == player_id, UserThemeXP.theme_id == theme_id)
+    )
+    uxp = xp_res.scalar_one_or_none()
+    if not uxp:
+        uxp = UserThemeXP(user_id=player_id, theme_id=theme_id, xp=0)
+        db.add(uxp)
+        await db.flush()
+
+    level_before = get_category_level(uxp.xp)
+
+    # XP Calculation (same formula)
+    base_xp = player_score * 2
+    victory_bonus = 50 if won else 0
+    perfection_bonus = 50 if perfect else 0
+    giant_slayer_bonus = 100 if (won and opponent_level - level_before >= 15) else 0
+
+    new_streak = (user.current_streak + 1) if won else 0
+    streak_bonus = get_streak_bonus(new_streak) if won else 0
+
+    total_xp = base_xp + victory_bonus + perfection_bonus + giant_slayer_bonus + streak_bonus
+
+    xp_breakdown = {
+        "base": base_xp, "victory": victory_bonus, "perfection": perfection_bonus,
+        "giant_slayer": giant_slayer_bonus, "streak": streak_bonus, "total": total_xp,
+    }
+
+    # Create match record
+    match = Match(
+        player1_id=player_id,
+        player2_pseudo=opponent_pseudo,
+        player2_is_bot=opponent_is_bot,
+        category=theme_id,  # Store theme_id in category field
+        player1_score=player_score,
+        player2_score=opponent_score,
+        player1_correct=correct_count,
+        winner_id=player_id if won else None,
+        xp_earned=total_xp,
+        xp_breakdown=xp_breakdown,
+        questions_data=questions_data,
+    )
+    db.add(match)
+
+    # Update theme XP
+    uxp.xp += total_xp
+    level_after = get_category_level(uxp.xp)
+
+    # Check new title
+    new_title_info = None
+    new_level = None
+    titles = {1: theme.title_lv1, 10: theme.title_lv10, 20: theme.title_lv20, 35: theme.title_lv35, 50: theme.title_lv50}
+    for threshold in TITLE_THRESHOLDS:
+        if level_before < threshold <= level_after:
+            title_text = titles.get(threshold)
+            if title_text:
+                new_title_info = {"level": threshold, "title": title_text, "category": theme_id, "theme_name": theme.name}
+    if level_after > level_before:
+        new_level = level_after
+
+    # Update user stats
+    user.matches_played += 1
+    if won:
+        user.matches_won += 1
+        user.current_streak += 1
+        if user.current_streak > user.best_streak:
+            user.best_streak = user.current_streak
+    else:
+        user.current_streak = 0
+
+    # Update total XP on user (sum of all theme XPs)
+    all_xp_res = await db.execute(
+        select(func.sum(UserThemeXP.xp)).where(UserThemeXP.user_id == player_id)
+    )
+    user.total_xp = all_xp_res.scalar() or 0
+
+    # Notification
+    if won:
+        notif_body = f"Victoire en {theme.name} ! +{total_xp} XP"
+    else:
+        notif_body = f"Défaite en {theme.name}. +{total_xp} XP"
+    await create_notification(
+        db, player_id, "match_result", "Résultat du match", notif_body,
+        data={"screen": "results", "params": {"matchId": match.id}},
+    )
+
+    await db.commit()
+    await db.refresh(match)
+
+    return {
+        "id": match.id,
+        "player1_id": match.player1_id,
+        "player2_pseudo": match.player2_pseudo,
+        "player2_is_bot": match.player2_is_bot,
+        "category": match.category,
+        "theme_name": theme.name,
+        "player1_score": match.player1_score,
+        "player2_score": match.player2_score,
+        "player1_correct": match.player1_correct,
+        "winner_id": match.winner_id,
+        "xp_earned": match.xp_earned,
+        "xp_breakdown": match.xp_breakdown,
+        "new_title": new_title_info,
+        "new_level": new_level,
+        "created_at": match.created_at.isoformat(),
+    }
+
+
+# ── Theme-based Profile ──
+
+@api_router.get("/profile-v2/{user_id}")
+async def get_profile_v2(user_id: str, db: AsyncSession = Depends(get_db)):
+    """Profile with theme-based XP system."""
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+
+    # Get all theme XPs for this user
+    xp_result = await db.execute(
+        select(UserThemeXP).where(UserThemeXP.user_id == user_id)
+    )
+    user_xps = xp_result.scalars().all()
+    xp_map = {uxp.theme_id: uxp.xp for uxp in user_xps}
+
+    # Get themes for context
+    theme_ids = list(xp_map.keys())
+    themes_data = []
+    all_unlocked_titles = []
+    if theme_ids:
+        themes_res = await db.execute(select(Theme).where(Theme.id.in_(theme_ids)))
+        themes = {t.id: t for t in themes_res.scalars().all()}
+
+        for tid, xp in sorted(xp_map.items(), key=lambda x: -x[1]):
+            t = themes.get(tid)
+            if not t:
+                continue
+            lvl = get_category_level(xp)
+            title = get_theme_title(t, lvl)
+            themes_data.append({
+                "id": t.id,
+                "name": t.name,
+                "super_category": t.super_category,
+                "cluster": t.cluster,
+                "color_hex": t.color_hex or "#8A2BE2",
+                "icon_url": t.icon_url or "",
+                "xp": xp,
+                "level": lvl,
+                "title": title,
+                "xp_progress": get_xp_progress(xp, lvl),
+            })
+            for ut in get_theme_unlocked_titles(t, lvl):
+                all_unlocked_titles.append({**ut, "theme_id": t.id, "theme_name": t.name})
+
+    # Match history
+    matches_res = await db.execute(
+        select(Match).where(Match.player1_id == user_id).order_by(Match.created_at.desc()).limit(10)
+    )
+    matches = matches_res.scalars().all()
+
+    # Followers
+    followers_count_res = await db.execute(
+        select(func.count(PlayerFollow.id)).where(PlayerFollow.followed_id == user_id)
+    )
+    followers_count = followers_count_res.scalar() or 0
+    following_count_res = await db.execute(
+        select(func.count(PlayerFollow.id)).where(PlayerFollow.follower_id == user_id)
+    )
+    following_count = following_count_res.scalar() or 0
+
+    country_flag = COUNTRY_FLAGS.get(user.country or "", "")
+
+    return {
+        "user": {
+            "id": user.id, "pseudo": user.pseudo, "avatar_seed": user.avatar_seed,
+            "is_guest": user.is_guest, "total_xp": user.total_xp,
+            "selected_title": user.selected_title,
+            "country": user.country, "country_flag": country_flag,
+            "matches_played": user.matches_played, "matches_won": user.matches_won,
+            "best_streak": user.best_streak, "current_streak": user.current_streak,
+            "streak_badge": get_streak_badge(user.current_streak),
+            "win_rate": round(user.matches_won / max(user.matches_played, 1) * 100),
+            "followers_count": followers_count,
+            "following_count": following_count,
+        },
+        "themes": themes_data,
+        "all_unlocked_titles": all_unlocked_titles,
+        "match_history": [
+            {
+                "id": m.id, "category": m.category,
+                "player_score": m.player1_score, "opponent_score": m.player2_score,
+                "opponent": m.player2_pseudo, "won": m.winner_id == user_id,
+                "xp_earned": m.xp_earned or 0,
+                "xp_breakdown": m.xp_breakdown,
+                "correct_count": m.player1_correct or 0,
+                "created_at": m.created_at.isoformat()
+            } for m in matches
+        ],
+    }
 
 
 # ── App Setup ──

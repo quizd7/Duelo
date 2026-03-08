@@ -136,7 +136,7 @@ export default function GameScreen() {
 
   const fetchQuestions = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/game/questions?category=${params.category}`);
+      const res = await fetch(`${API_URL}/api/game/questions-v2?theme=${params.category}`);
       const data = await res.json();
       setQuestions(data.slice(0, TOTAL_QUESTIONS));
       setLoading(false);

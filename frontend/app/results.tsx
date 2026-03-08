@@ -9,15 +9,9 @@ import * as Haptics from 'expo-haptics';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
-const CATEGORY_NAMES: Record<string, string> = {
-  series_tv: 'Séries TV Cultes',
-  geographie: 'Géographie Mondiale',
-  histoire: 'Histoire de France',
-};
+const CATEGORY_NAMES: Record<string, string> = {};
 
-const CATEGORY_ICONS: Record<string, string> = {
-  series_tv: '📺', geographie: '🌍', histoire: '🏛️',
-};
+const CATEGORY_ICONS: Record<string, string> = {};
 
 type XpBreakdown = {
   base: number;
@@ -84,12 +78,12 @@ export default function ResultsScreen() {
   const submitMatch = async () => {
     try {
       const userId = params.userId || await AsyncStorage.getItem('duelo_user_id');
-      const res = await fetch(`${API_URL}/api/game/submit`, {
+      const res = await fetch(`${API_URL}/api/game/submit-v2`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           player_id: userId,
-          category: params.category,
+          theme_id: params.category,
           player_score: pScore,
           opponent_score: oScore,
           opponent_pseudo: params.opponentPseudo,

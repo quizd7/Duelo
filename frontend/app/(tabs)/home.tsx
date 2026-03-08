@@ -1,58 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator
+  View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import DueloHeader from '../../components/DueloHeader';
-import { GlassIconFrame } from '../../components/GlassIconFrame';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
-const GRID_PAD = 16;
 
-const CATEGORY_ICONS: Record<string, string> = {
-  series_tv: '📺',
-  geographie: '🌍',
-  histoire: '🏛️',
-  cinema: '🎬',
-  sport: '⚽',
-  musique: '🎵',
-  sciences: '🔬',
-  gastronomie: '🍽️',
-};
-
-const CATEGORY_COLORS: Record<string, string> = {
-  series_tv: '#E040FB',
-  geographie: '#00FFFF',
-  histoire: '#FFD700',
-  cinema: '#FF6B6B',
-  sport: '#00FF9D',
-  musique: '#FF8C00',
-  sciences: '#7B68EE',
-  gastronomie: '#FF69B4',
-};
-
-type Category = {
+type SuperCategory = {
   id: string;
-  name: string;
-  question_count: number;
-};
-
-type FeaturedTopic = {
-  id: string;
-  name: string;
+  label: string;
   icon: string;
-  icon_url: string;
-  category_id: string;
-  pillar_color: string;
+  color: string;
+  clusters: { name: string; icon: string; theme_count: number }[];
+  total_themes: number;
 };
+
+// Placeholder items for upcoming super categories
+const UPCOMING_CATS = [
+  { id: 'SOUND', label: 'Sound', icon: '🎵', color: '#FF6B35' },
+  { id: 'ARENA', label: 'Arena', icon: '⚽', color: '#00FF9D' },
+  { id: 'LEGENDS', label: 'Legends', icon: '🏛️', color: '#FFD700' },
+  { id: 'LAB', label: 'Lab', icon: '🔬', color: '#00FFFF' },
+  { id: 'TASTE', label: 'Taste', icon: '🍽️', color: '#FF69B4' },
+  { id: 'GLOBE', label: 'Globe', icon: '🌍', color: '#4ECDC4' },
+  { id: 'PIXEL', label: 'Pixel', icon: '🎮', color: '#FF3B5C' },
+  { id: 'STYLE', label: 'Style', icon: '✨', color: '#E040FB' },
+];
 
 export default function HomeScreen() {
   const router = useRouter();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [featuredTopics, setFeaturedTopics] = useState<FeaturedTopic[]>([]);
+  const [superCategories, setSuperCategories] = useState<SuperCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [pseudo, setPseudo] = useState('');
 
@@ -65,29 +46,16 @@ export default function HomeScreen() {
     if (storedPseudo) setPseudo(storedPseudo);
 
     try {
-      const [catRes, themesRes] = await Promise.all([
-        fetch(`${API_URL}/api/categories`),
-        fetch(`${API_URL}/api/themes/explore`),
-      ]);
-      const catData = await catRes.json();
-      setCategories(catData);
-
-      const themesData = await themesRes.json();
-      // Extract all topics from all pillars
-      const topics: FeaturedTopic[] = [];
-      for (const pillar of (themesData.pillars || [])) {
-        for (const theme of (pillar.themes || [])) {
-          for (const topic of (theme.topics || [])) {
-            topics.push({
-              ...topic,
-              pillar_color: pillar.color,
-            });
-          }
-        }
-      }
-      setFeaturedTopics(topics);
+      const res = await fetch(`${API_URL}/api/explore/super-categories`);
+      const data = await res.json();
+      setSuperCategories(data);
     } catch {}
     setLoading(false);
+  };
+
+  const handlePress = (cat: SuperCategory) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push(`/super-category?id=${cat.id}`);
   };
 
   if (loading) {
@@ -98,77 +66,78 @@ export default function HomeScreen() {
     );
   }
 
+  // Merge loaded + upcoming (show upcoming as locked)
+  const loadedIds = new Set(superCategories.map(sc => sc.id));
+  const upcomingFiltered = UPCOMING_CATS.filter(c => !loadedIds.has(c.id));
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
       <DueloHeader />
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <Text style={styles.greeting}>Salut, {pseudo || 'Joueur'} 👋</Text>
+        <Text style={styles.sectionTitle}>SUPER CATÉGORIES</Text>
 
-        {/* Featured Topics */}
-        {featuredTopics.length > 0 && (
-          <View style={styles.featuredSection}>
-            <Text style={styles.sectionTitle}>À LA UNE</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.featuredScroll}
-            >
-              {featuredTopics.map((topic) => (
-                <TouchableOpacity
-                  key={topic.id}
-                  style={styles.featuredCard}
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                    router.push(`/category-detail?id=${topic.category_id}`);
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <View style={[styles.featuredCardInner, { borderColor: topic.pillar_color + '25' }]}>
-                    <View style={[styles.featuredGlow, { backgroundColor: topic.pillar_color + '06', shadowColor: topic.pillar_color }]} />
-                    <GlassIconFrame
-                      iconUrl={topic.icon_url || undefined}
-                      emoji={!topic.icon_url ? topic.icon : undefined}
-                      size={60}
-                      pillarColor={topic.pillar_color}
-                      progress={0}
-                      showRing={true}
-                    />
-                    <Text style={styles.featuredName} numberOfLines={2}>{topic.name}</Text>
+        {/* Active Super Categories */}
+        {superCategories.map((cat) => (
+          <TouchableOpacity
+            key={cat.id}
+            style={styles.superCard}
+            onPress={() => handlePress(cat)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.superCardInner, { borderColor: cat.color + '30' }]}>
+              <View style={[styles.superCardGlow, { backgroundColor: cat.color + '08' }]} />
+              <View style={styles.superCardTop}>
+                <View style={[styles.superIconBox, { backgroundColor: cat.color + '20' }]}>
+                  <Text style={styles.superIcon}>{cat.icon}</Text>
+                </View>
+                <View style={styles.superCardInfo}>
+                  <Text style={[styles.superLabel, { color: cat.color }]}>{cat.label.toUpperCase()}</Text>
+                  <Text style={styles.superMeta}>{cat.total_themes} thèmes</Text>
+                </View>
+                <Text style={styles.superChevron}>›</Text>
+              </View>
+
+              {/* Clusters preview */}
+              <View style={styles.clustersPreview}>
+                {cat.clusters.map((cluster) => (
+                  <View key={cluster.name} style={styles.clusterPill}>
+                    <Text style={styles.clusterPillIcon}>{cluster.icon}</Text>
+                    <Text style={styles.clusterPillText}>{cluster.name}</Text>
+                    <Text style={styles.clusterPillCount}>{cluster.theme_count}</Text>
                   </View>
-                </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </TouchableOpacity>
+        ))}
+
+        {/* Upcoming categories */}
+        {upcomingFiltered.length > 0 && (
+          <>
+            <Text style={[styles.sectionTitle, { marginTop: 24 }]}>BIENTÔT DISPONIBLE</Text>
+            <View style={styles.upcomingGrid}>
+              {upcomingFiltered.map((cat) => (
+                <View key={cat.id} style={styles.upcomingCard}>
+                  <View style={[styles.upcomingInner, { borderColor: cat.color + '15' }]}>
+                    <View style={[styles.upcomingIconBox, { backgroundColor: cat.color + '10' }]}>
+                      <Text style={styles.upcomingIcon}>{cat.icon}</Text>
+                    </View>
+                    <Text style={[styles.upcomingLabel, { color: cat.color + '60' }]}>
+                      {cat.label}
+                    </Text>
+                    <View style={styles.lockBadge}>
+                      <Text style={styles.lockText}>🔒</Text>
+                    </View>
+                  </View>
+                </View>
               ))}
-            </ScrollView>
-          </View>
+            </View>
+          </>
         )}
 
-        <Text style={styles.sectionTitle}>CHOISIS TA CATÉGORIE</Text>
-
-        <View style={styles.categoriesGrid}>
-          {categories.map((cat) => {
-            const color = CATEGORY_COLORS[cat.id] || '#8A2BE2';
-            return (
-              <TouchableOpacity
-                key={cat.id}
-                testID={`category-${cat.id}`}
-                style={styles.categoryCard}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.push(`/category-detail?id=${cat.id}`);
-                }}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.categoryCardInner, { borderColor: color + '30' }]}>
-                  <View style={[styles.categoryIconBox, { backgroundColor: color + '20' }]}>
-                    <Text style={styles.categoryIcon}>{CATEGORY_ICONS[cat.id] || '❓'}</Text>
-                  </View>
-                  <Text style={[styles.categoryName, { color }]} numberOfLines={1}>{cat.name}</Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+        <View style={{ height: 30 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -179,48 +148,68 @@ const styles = StyleSheet.create({
   loadingContainer: { flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
   scroll: { paddingBottom: 30 },
 
-  greeting: { fontSize: 22, fontWeight: '800', color: '#FFF', marginTop: 20, marginBottom: 24, paddingHorizontal: GRID_PAD },
-
+  greeting: {
+    fontSize: 22, fontWeight: '800', color: '#FFF',
+    marginTop: 20, marginBottom: 24, paddingHorizontal: 16,
+  },
   sectionTitle: {
     fontSize: 12, fontWeight: '800', color: '#525252', letterSpacing: 3,
-    marginBottom: 16, paddingHorizontal: GRID_PAD,
+    marginBottom: 16, paddingHorizontal: 16,
   },
 
-  // Featured topics
-  featuredSection: { marginBottom: 24 },
-  featuredScroll: { paddingHorizontal: 12, gap: 10 },
-  featuredCard: { width: 120 },
-  featuredCardInner: {
-    width: '100%', borderRadius: 18, padding: 12,
+  // Super Category Card
+  superCard: { marginHorizontal: 16, marginBottom: 16 },
+  superCardInner: {
+    borderRadius: 20, padding: 16,
     backgroundColor: 'rgba(255,255,255,0.03)',
-    borderWidth: 1, alignItems: 'center', minHeight: 140,
-    overflow: 'hidden',
+    borderWidth: 1, overflow: 'hidden',
   },
-  featuredGlow: {
-    position: 'absolute', top: -20, left: -20, right: -20, height: 70,
-    shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.2, shadowRadius: 20,
+  superCardGlow: {
+    position: 'absolute', top: 0, left: 0, right: 0, height: 60,
   },
-  featuredName: { color: '#FFF', fontSize: 12, fontWeight: '700', textAlign: 'center', marginTop: 8, lineHeight: 15 },
+  superCardTop: {
+    flexDirection: 'row', alignItems: 'center',
+  },
+  superIconBox: {
+    width: 56, height: 56, borderRadius: 16,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  superIcon: { fontSize: 30 },
+  superCardInfo: { flex: 1, marginLeft: 14 },
+  superLabel: { fontSize: 20, fontWeight: '900', letterSpacing: 2 },
+  superMeta: { color: '#666', fontSize: 13, fontWeight: '600', marginTop: 2 },
+  superChevron: { color: '#444', fontSize: 28, fontWeight: '300' },
 
-  // Grid
-  categoriesGrid: {
-    flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: GRID_PAD,
+  // Clusters preview
+  clustersPreview: {
+    flexDirection: 'row', flexWrap: 'wrap', marginTop: 14, gap: 8,
   },
-  categoryCard: {
-    width: '25%', padding: 5,
+  clusterPill: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6,
+    gap: 6,
+  },
+  clusterPillIcon: { fontSize: 14 },
+  clusterPillText: { color: '#AAA', fontSize: 12, fontWeight: '600' },
+  clusterPillCount: { color: '#555', fontSize: 11, fontWeight: '700' },
+
+  // Upcoming
+  upcomingGrid: {
+    flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16,
+  },
+  upcomingCard: { width: '25%', padding: 4 },
+  upcomingInner: {
+    borderRadius: 14, padding: 10, borderWidth: 1,
+    backgroundColor: 'rgba(255,255,255,0.02)',
     alignItems: 'center',
   },
-  categoryCardInner: {
-    width: '100%', borderRadius: 16, padding: 10,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
-    alignItems: 'center',
+  upcomingIconBox: {
+    width: 40, height: 40, borderRadius: 12,
+    justifyContent: 'center', alignItems: 'center', marginBottom: 6,
   },
-  categoryIconBox: {
-    width: 48, height: 48, borderRadius: 14,
-    justifyContent: 'center', alignItems: 'center', marginBottom: 8,
-  },
-  categoryIcon: { fontSize: 26 },
-  categoryName: { fontSize: 11, fontWeight: '800', textAlign: 'center', marginBottom: 4 },
-  categoryCount: { fontSize: 10, color: '#525252', fontWeight: '600' },
+  upcomingIcon: { fontSize: 20 },
+  upcomingLabel: { fontSize: 10, fontWeight: '700', textAlign: 'center' },
+  lockBadge: { marginTop: 4 },
+  lockText: { fontSize: 10 },
 });
