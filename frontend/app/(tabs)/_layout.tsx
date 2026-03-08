@@ -1,10 +1,26 @@
 import { Tabs } from 'expo-router';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, Image, StyleSheet, Platform } from 'react-native';
 
-function TabIcon({ label, focused, icon }: { label: string; focused: boolean; icon: string }) {
+// Tab icon assets
+const TAB_ICONS = {
+  home: require('../../assets/tabs/home.png'),
+  social: require('../../assets/tabs/social.png'),
+  play: require('../../assets/tabs/play.png'),
+  themes: require('../../assets/tabs/themes.png'),
+  profile: require('../../assets/tabs/profile.png'),
+};
+
+function TabIcon({ label, focused, iconSource }: { label: string; focused: boolean; iconSource: any }) {
   return (
     <View style={styles.tabItem}>
-      <Text style={[styles.tabIcon, focused && styles.tabIconActive]}>{icon}</Text>
+      <Image
+        source={iconSource}
+        style={[
+          styles.tabIconImage,
+          { opacity: focused ? 1 : 0.45 },
+        ]}
+        resizeMode="contain"
+      />
       <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>{label}</Text>
       {focused && <View style={styles.activeIndicator} />}
     </View>
@@ -15,7 +31,11 @@ function PlayTabIcon({ focused }: { focused: boolean }) {
   return (
     <View style={styles.playTabWrap}>
       <View style={[styles.playTabCircle, focused && styles.playTabCircleActive]}>
-        <Text style={styles.playTabIcon}>⚔️</Text>
+        <Image
+          source={TAB_ICONS.play}
+          style={styles.playTabIconImage}
+          resizeMode="contain"
+        />
       </View>
       <Text style={[styles.tabLabel, focused && styles.tabLabelActive, { marginTop: 4 }]}>Jouer</Text>
     </View>
@@ -36,13 +56,13 @@ export default function TabLayout() {
       <Tabs.Screen
         name="accueil"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon label="Accueil" focused={focused} icon="🏠" />,
+          tabBarIcon: ({ focused }) => <TabIcon label="Accueil" focused={focused} iconSource={TAB_ICONS.home} />,
         }}
       />
       <Tabs.Screen
         name="players"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon label="Social" focused={focused} icon="⚡" />,
+          tabBarIcon: ({ focused }) => <TabIcon label="Social" focused={focused} iconSource={TAB_ICONS.social} />,
         }}
       />
       <Tabs.Screen
@@ -54,13 +74,13 @@ export default function TabLayout() {
       <Tabs.Screen
         name="themes"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon label="Thèmes" focused={focused} icon="📚" />,
+          tabBarIcon: ({ focused }) => <TabIcon label="Thèmes" focused={focused} iconSource={TAB_ICONS.themes} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon label="Profil" focused={focused} icon="👤" />,
+          tabBarIcon: ({ focused }) => <TabIcon label="Profil" focused={focused} iconSource={TAB_ICONS.profile} />,
         }}
       />
       <Tabs.Screen
@@ -83,13 +103,15 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   tabItem: { alignItems: 'center', justifyContent: 'center', paddingTop: 4 },
-  tabIcon: { fontSize: 22 },
-  tabIconActive: { transform: [{ scale: 1.15 }] },
-  tabLabel: { fontSize: 10, color: '#525252', marginTop: 4, fontWeight: '600' },
+  tabIconImage: {
+    width: 28,
+    height: 28,
+  },
+  tabLabel: { fontSize: 10, color: '#525252', marginTop: 3, fontWeight: '600' },
   tabLabelActive: { color: '#8A2BE2' },
   activeIndicator: {
     width: 4, height: 4, borderRadius: 2,
-    backgroundColor: '#8A2BE2', marginTop: 4,
+    backgroundColor: '#8A2BE2', marginTop: 3,
     shadowColor: '#8A2BE2', shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8, shadowRadius: 4,
   },
@@ -104,5 +126,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#9B3FFF',
     shadowOpacity: 0.8, shadowRadius: 16,
   },
-  playTabIcon: { fontSize: 24 },
+  playTabIconImage: {
+    width: 30,
+    height: 30,
+  },
 });
