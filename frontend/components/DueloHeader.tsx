@@ -11,6 +11,7 @@ const HEADER_ICONS = {
   search: require('../assets/header/search.png'),
   message: require('../assets/header/message.png'),
   notification: require('../assets/header/notification.png'),
+  logo: require('../assets/header/duelo_logo.png'),
 };
 
 export default function DueloHeader() {
@@ -51,19 +52,23 @@ export default function DueloHeader() {
   return (
     <View style={styles.header}>
       {/* Left: Search */}
-      <TouchableOpacity
-        style={styles.iconBtn}
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          router.push('/search');
-        }}
-        activeOpacity={0.7}
-      >
-        <Image source={HEADER_ICONS.search} style={styles.headerIcon} resizeMode="contain" />
-      </TouchableOpacity>
+      <View style={styles.leftSection}>
+        <TouchableOpacity
+          style={styles.iconBtn}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            router.push('/search');
+          }}
+          activeOpacity={0.7}
+        >
+          <Image source={HEADER_ICONS.search} style={styles.headerIcon} resizeMode="contain" />
+        </TouchableOpacity>
+      </View>
 
-      {/* Center: DUELO */}
-      <Text style={styles.logo}>DUELO</Text>
+      {/* Center: DUELO Logo (absolutely centered) */}
+      <View style={styles.logoContainer}>
+        <Image source={HEADER_ICONS.logo} style={styles.logoImage} resizeMode="contain" />
+      </View>
 
       {/* Right: Messages + Notifications */}
       <View style={styles.rightIcons}>
@@ -112,6 +117,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.06)',
   },
+  leftSection: {
+    width: 84,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
   iconBtn: {
     width: 40,
     height: 40,
@@ -124,15 +135,20 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
   },
-  logo: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#8A2BE2',
-    letterSpacing: 6,
+  logoContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoImage: {
+    width: 120,
+    height: 36,
   },
   rightIcons: {
+    width: 84,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
     gap: 4,
   },
   badge: {

@@ -17,7 +17,7 @@ function TabIcon({ label, focused, iconSource }: { label: string; focused: boole
         source={iconSource}
         style={[
           styles.tabIconImage,
-          { opacity: focused ? 1 : 0.45 },
+          { opacity: focused ? 1 : 0.55 },
         ]}
         resizeMode="contain"
       />
