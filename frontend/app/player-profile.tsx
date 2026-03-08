@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
+import { GLASS } from '../theme/glassTheme';
 
 const { width } = Dimensions.get('window');
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
@@ -280,8 +281,8 @@ export default function PlayerProfileScreen() {
 const CARD_SIZE = (width - 72) / 4;
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  loadingContainer: { flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
+  container: { flex: 1, backgroundColor: 'transparent' },
+  loadingContainer: { flex: 1, backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' },
   scroll: { paddingBottom: 40 },
 
   backBtn: { paddingHorizontal: 20, paddingVertical: 12 },
@@ -299,9 +300,9 @@ const s = StyleSheet.create({
   },
   avatarRing: {
     marginTop: 60, width: 100, height: 100, borderRadius: 50,
-    borderWidth: 3, borderColor: '#8A2BE2',
+    borderWidth: 3, borderColor: '#00FFFF',
     justifyContent: 'center', alignItems: 'center',
-    backgroundColor: '#000',
+    backgroundColor: 'rgba(8, 8, 24, 0.65)',
   },
   avatar: {
     width: 90, height: 90, borderRadius: 45, backgroundColor: '#1A1A2E',

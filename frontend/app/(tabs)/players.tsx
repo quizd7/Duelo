@@ -15,6 +15,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 import DueloHeader from '../../components/DueloHeader';
+import { GLASS } from '../../theme/glassTheme';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -201,7 +202,7 @@ const ExploitCard = ({ item, onChallenge, onProfile }: {
 const exploitStyles = StyleSheet.create({
   card: {
     marginHorizontal: 16, marginBottom: 10, borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1,
+    backgroundColor: GLASS.bg, borderWidth: 1,
     padding: 14, overflow: 'hidden',
   },
   cardGlow: {
@@ -280,7 +281,7 @@ const TribeCard = ({ tribe, onPress }: { tribe: Tribe; onPress: () => void }) =>
 const tribeStyles = StyleSheet.create({
   card: {
     width: 160, marginRight: 12, borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1,
+    backgroundColor: GLASS.bg, borderWidth: 1,
     overflow: 'hidden',
   },
   pillarBar: { height: 3, width: '100%' },
@@ -333,7 +334,7 @@ const CoachWidget = ({ suggestions, onAction }: {
 const coachStyles = StyleSheet.create({
   widget: {
     marginHorizontal: 16, marginBottom: 16, borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1,
+    backgroundColor: GLASS.bg, borderWidth: 1,
     flexDirection: 'row', alignItems: 'center', padding: 14, gap: 12,
   },
   iconWrap: {
@@ -751,7 +752,7 @@ const forgeStyles = StyleSheet.create({
   communityHint: { fontSize: 12, color: '#555', fontWeight: '500', marginBottom: 16, lineHeight: 17 },
   communityCard: {
     flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1, marginBottom: 10, gap: 12,
+    backgroundColor: GLASS.bg, borderWidth: 1, marginBottom: 10, gap: 12,
   },
   communityIconWrap: {
     width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center',
@@ -771,7 +772,7 @@ const forgeStyles = StyleSheet.create({
 
 // ── Main Styles ──
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: { flex: 1, backgroundColor: 'transparent' },
   scrollContent: { paddingBottom: 20 },
 
   // Section Nav
@@ -781,7 +782,7 @@ const s = StyleSheet.create({
   sectionTab: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     paddingVertical: 10, borderRadius: 14, gap: 6,
-    backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: GLASS.bg, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
   },
   sectionTabIcon: { fontSize: 16 },
   sectionTabLabel: { fontSize: 11, fontWeight: '900', color: '#555', letterSpacing: 1 },
@@ -808,7 +809,7 @@ const s = StyleSheet.create({
   pillarFilterChip: {
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8,
     borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)', gap: 4,
+    borderColor: GLASS.borderSubtle, gap: 4,
   },
   pillarFilterIcon: { fontSize: 14 },
   pillarFilterName: { fontSize: 10, fontWeight: '800', letterSpacing: 1 },

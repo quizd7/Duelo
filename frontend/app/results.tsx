@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
+import { GLASS } from '../theme/glassTheme';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
@@ -275,7 +276,7 @@ export default function ResultsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: { flex: 1, backgroundColor: 'transparent' },
   content: { flex: 1, justifyContent: 'center', paddingHorizontal: 24 },
   resultHeader: { alignItems: 'center', marginBottom: 20 },
   resultEmoji: { fontSize: 56, marginBottom: 8 },
@@ -290,8 +291,8 @@ const styles = StyleSheet.create({
   },
   levelUpText: { color: '#8A2BE2', fontSize: 14, fontWeight: '800' },
   scoreCard: {
-    backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 20, padding: 20,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', marginBottom: 16,
+    backgroundColor: GLASS.bgLight, borderRadius: GLASS.radiusLg, padding: 20,
+    borderWidth: 1, borderColor: GLASS.borderCyan, marginBottom: 16,
   },
   scoreCardInner: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   playerColumn: { alignItems: 'center', flex: 1 },
@@ -307,7 +308,7 @@ const styles = StyleSheet.create({
   categoryBadge: { fontSize: 9, color: '#525252', fontWeight: '600', textAlign: 'center', marginTop: 2 },
   // XP Card
   xpCard: {
-    backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 18,
+    backgroundColor: GLASS.bg, borderRadius: 16, padding: 18,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', marginBottom: 16,
   },
   xpTitle: { fontSize: 11, fontWeight: '800', color: '#525252', letterSpacing: 3, marginBottom: 12 },
@@ -350,7 +351,7 @@ const styles = StyleSheet.create({
   },
   celebrationCategory: {
     flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 32,
-    backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8,
+    backgroundColor: GLASS.bgLight, borderRadius: GLASS.radiusLg, paddingHorizontal: 16, paddingVertical: 8,
   },
   celebrationCatIcon: { fontSize: 18 },
   celebrationCatText: { color: '#A3A3A3', fontSize: 14, fontWeight: '600' },

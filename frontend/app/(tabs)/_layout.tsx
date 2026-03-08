@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import { View, Text, Image, StyleSheet, Platform } from 'react-native';
+import { GLASS } from '../../theme/glassTheme';
 
 // Tab icon assets
 const TAB_ICONS = {
@@ -49,8 +50,9 @@ export default function TabLayout() {
         headerShown: false,
         tabBarStyle: styles.tabBar,
         tabBarShowLabel: false,
-        tabBarActiveTintColor: '#8A2BE2',
+        tabBarActiveTintColor: '#00FFFF',
         tabBarInactiveTintColor: '#525252',
+        sceneStyle: { backgroundColor: 'transparent' },
       }}
     >
       <Tabs.Screen
@@ -62,7 +64,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="players"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon label="Social" focused={focused} iconSource={TAB_ICONS.social} />,
+          tabBarIcon: ({ focused }) => <TabIcon label="MESSAGE" focused={focused} iconSource={TAB_ICONS.social} />,
         }}
       />
       <Tabs.Screen
@@ -95,36 +97,52 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: '#0A0A0A',
+    backgroundColor: GLASS.bgDark,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.06)',
+    borderTopColor: GLASS.borderCyan,
     height: Platform.OS === 'ios' ? 88 : 68,
     paddingTop: 8,
     elevation: 0,
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+      } as any,
+      default: {},
+    }),
   },
   tabItem: { alignItems: 'center', justifyContent: 'center', paddingTop: 4, minWidth: 56 },
   tabIconImage: {
     width: 36,
     height: 36,
   },
-  tabLabel: { fontSize: 9, color: '#525252', marginTop: 3, fontWeight: '600' },
-  tabLabelActive: { color: '#8A2BE2' },
+  tabLabel: {
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.5)',
+    marginTop: 3,
+    fontWeight: '700',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    letterSpacing: 0.5,
+  },
+  tabLabelActive: { color: '#00FFFF' },
   activeIndicator: {
     width: 4, height: 4, borderRadius: 2,
-    backgroundColor: '#8A2BE2', marginTop: 3,
-    shadowColor: '#8A2BE2', shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8, shadowRadius: 4,
+    backgroundColor: '#00FFFF', marginTop: 3,
+    shadowColor: '#00FFFF', shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8, shadowRadius: 6,
   },
   playTabWrap: { alignItems: 'center', justifyContent: 'center', marginTop: -12 },
   playTabCircle: {
     width: 52, height: 52, borderRadius: 26,
     backgroundColor: '#8A2BE2', justifyContent: 'center', alignItems: 'center',
-    shadowColor: '#8A2BE2', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5, shadowRadius: 12, elevation: 8,
+    borderWidth: 1.5, borderColor: 'rgba(0, 255, 255, 0.4)',
+    shadowColor: '#00FFFF', shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4, shadowRadius: 12, elevation: 8,
   },
   playTabCircleActive: {
     backgroundColor: '#9B3FFF',
-    shadowOpacity: 0.8, shadowRadius: 16,
+    borderColor: 'rgba(0, 255, 255, 0.7)',
+    shadowOpacity: 0.7, shadowRadius: 16,
   },
   playTabIconImage: {
     width: 38,

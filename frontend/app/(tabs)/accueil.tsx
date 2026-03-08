@@ -15,6 +15,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import DueloHeader from '../../components/DueloHeader';
 
+import { GLASS } from '../../theme/glassTheme';
+
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const DUEL_CARD_WIDTH = SCREEN_WIDTH * 0.72;
@@ -575,7 +577,7 @@ export default function AccueilScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: { flex: 1, backgroundColor: 'transparent' },
   loadingWrap: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   scrollView: { flex: 1 },
   scrollContent: { paddingBottom: 20 },
@@ -667,17 +669,17 @@ const styles = StyleSheet.create({
   // ── Duel Card ──
   duelCard: {
     width: DUEL_CARD_WIDTH,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: GLASS.radius,
+    backgroundColor: GLASS.bg,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
+    borderColor: GLASS.borderCyan,
     padding: 16,
     overflow: 'hidden',
   },
   duelGlass: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255,255,255,0.02)',
-    borderRadius: 20,
+    backgroundColor: 'rgba(0, 255, 255, 0.02)',
+    borderRadius: GLASS.radius,
   },
   duelCatBadge: {
     flexDirection: 'row',
@@ -774,7 +776,7 @@ const styles = StyleSheet.create({
   quickPlayBtn: {
     marginHorizontal: 16,
     marginTop: 8,
-    borderRadius: 16,
+    borderRadius: GLASS.radius,
     overflow: 'hidden',
   },
   quickPlayGradient: {
@@ -783,7 +785,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 16,
     gap: 10,
-    borderRadius: 16,
+    borderRadius: GLASS.radius,
   },
   quickPlayIcon: { fontSize: 20 },
   quickPlayText: {
@@ -797,10 +799,10 @@ const styles = StyleSheet.create({
   feedCard: {
     marginHorizontal: 16,
     marginBottom: 12,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: GLASS.radius,
+    backgroundColor: GLASS.bg,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
+    borderColor: GLASS.borderCyan,
     padding: 14,
   },
   feedCardHeader: {

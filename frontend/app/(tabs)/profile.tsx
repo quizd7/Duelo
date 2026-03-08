@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import DueloHeader from '../../components/DueloHeader';
+import { GLASS } from '../../theme/glassTheme';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const GRID_PAD = 16;
@@ -356,8 +357,8 @@ export default function ProfileScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  loadingContainer: { flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
+  container: { flex: 1, backgroundColor: 'transparent' },
+  loadingContainer: { flex: 1, backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyText: { color: '#A3A3A3', fontSize: 16, marginBottom: 16 },
   loginBtn: { backgroundColor: '#8A2BE2', borderRadius: 12, paddingHorizontal: 24, paddingVertical: 12 },
@@ -390,13 +391,13 @@ const s = StyleSheet.create({
   statsRow: {
     flexDirection: 'row', alignItems: 'center',
     marginHorizontal: GRID_PAD, paddingVertical: 16,
-    backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 16,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: GLASS.bg, borderRadius: GLASS.radius,
+    borderWidth: 1, borderColor: GLASS.borderCyan,
   },
   statItem: { flex: 1, alignItems: 'center' },
   statValue: { fontSize: 22, fontWeight: '900', color: '#FFF' },
-  statLabel: { fontSize: 9, fontWeight: '800', color: '#525252', letterSpacing: 1.5, marginTop: 4 },
-  statDivider: { width: 1, height: 36, backgroundColor: 'rgba(255,255,255,0.08)' },
+  statLabel: { fontSize: 9, fontWeight: '800', color: 'rgba(255,255,255,0.45)', letterSpacing: 1.5, marginTop: 4 },
+  statDivider: { width: 1, height: 36, backgroundColor: GLASS.borderSubtle },
 
   /* Section Title */
   sectionTitle: {
@@ -408,8 +409,9 @@ const s = StyleSheet.create({
   topicsGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: GRID_PAD - 5 },
   topicCard: { width: '25%', padding: 5, alignItems: 'center' },
   topicCardInner: {
-    width: '100%', borderRadius: 14, paddingVertical: 12, paddingHorizontal: 6,
-    borderWidth: 1, backgroundColor: 'rgba(255,255,255,0.03)', alignItems: 'center',
+    width: '100%', borderRadius: GLASS.radius, paddingVertical: 12, paddingHorizontal: 6,
+    borderWidth: 1, backgroundColor: GLASS.bg, alignItems: 'center',
+    borderColor: GLASS.borderSubtle,
   },
   topicIconBox: {
     width: 44, height: 44, borderRadius: 14,
@@ -424,18 +426,18 @@ const s = StyleSheet.create({
   /* Quick Stats */
   quickStats: { flexDirection: 'row', gap: 8, paddingHorizontal: GRID_PAD },
   qStatBox: {
-    flex: 1, backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 14,
-    padding: 14, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+    flex: 1, backgroundColor: GLASS.bg, borderRadius: GLASS.radius,
+    padding: 14, alignItems: 'center', borderWidth: 1, borderColor: GLASS.borderCyan,
   },
   qStatVal: { fontSize: 20, fontWeight: '800', color: '#FFF' },
-  qStatLbl: { fontSize: 9, color: '#525252', marginTop: 4, fontWeight: '700', textTransform: 'uppercase' },
+  qStatLbl: { fontSize: 9, color: 'rgba(255,255,255,0.45)', marginTop: 4, fontWeight: '700', textTransform: 'uppercase' },
 
   /* Titles */
   titlesWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: GRID_PAD, marginBottom: 8 },
   titleChip: {
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8,
-    borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', gap: 6,
+    borderRadius: GLASS.radius, backgroundColor: GLASS.bgLight,
+    borderWidth: 1, borderColor: GLASS.borderSubtle, gap: 6,
   },
   titleChipText: { color: '#666', fontSize: 10, fontWeight: '600' },
   titleChipTitle: { color: '#A3A3A3', fontSize: 13, fontWeight: '600' },
@@ -445,8 +447,8 @@ const s = StyleSheet.create({
   noHistory: { color: '#525252', fontSize: 14, textAlign: 'center', paddingVertical: 20, paddingHorizontal: GRID_PAD },
   matchCard: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: 14,
-    marginBottom: 8, marginHorizontal: GRID_PAD, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: GLASS.bg, borderRadius: GLASS.radius, padding: 14,
+    marginBottom: 8, marginHorizontal: GRID_PAD, borderWidth: 1, borderColor: GLASS.borderCyan,
   },
   matchCardWon: { borderColor: 'rgba(0,255,157,0.15)', backgroundColor: 'rgba(0,255,157,0.04)' },
   matchLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -469,9 +471,9 @@ const s = StyleSheet.create({
 
   /* Settings */
   settingsWrap: {
-    marginHorizontal: GRID_PAD, borderRadius: 14, overflow: 'hidden',
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)', marginBottom: 24,
+    marginHorizontal: GRID_PAD, borderRadius: GLASS.radius, overflow: 'hidden',
+    backgroundColor: GLASS.bg,
+    borderWidth: 1, borderColor: GLASS.borderCyan, marginBottom: 24,
   },
   settingsRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16 },
   settingsIcon: { fontSize: 18, marginRight: 12 },
@@ -482,8 +484,8 @@ const s = StyleSheet.create({
   /* Modal */
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', paddingHorizontal: 24 },
   modalContent: {
-    backgroundColor: '#1A1A1A', borderRadius: 20, padding: 24, maxHeight: '70%',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: GLASS.bgDark, borderRadius: GLASS.radiusLg, padding: 24, maxHeight: '70%',
+    borderWidth: 1.5, borderColor: GLASS.borderCyan,
   },
   modalTitle: { fontSize: 22, fontWeight: '800', color: '#FFF', marginBottom: 4 },
   modalHint: { fontSize: 13, color: '#525252', marginBottom: 20 },

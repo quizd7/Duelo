@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
+import { GLASS } from '../../theme/glassTheme';
 import DueloHeader from '../../components/DueloHeader';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
@@ -144,8 +145,8 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  loadingContainer: { flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
+  container: { flex: 1, backgroundColor: 'transparent' },
+  loadingContainer: { flex: 1, backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' },
   scroll: { paddingBottom: 30 },
 
   greeting: {
@@ -160,9 +161,10 @@ const styles = StyleSheet.create({
   // Super Category Card
   superCard: { marginHorizontal: 16, marginBottom: 16 },
   superCardInner: {
-    borderRadius: 20, padding: 16,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: GLASS.radius, padding: 16,
+    backgroundColor: GLASS.bg,
     borderWidth: 1, overflow: 'hidden',
+    borderColor: GLASS.borderCyan,
   },
   superCardGlow: {
     position: 'absolute', top: 0, left: 0, right: 0, height: 60,
@@ -186,9 +188,11 @@ const styles = StyleSheet.create({
   },
   clusterPill: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: GLASS.bgLight,
     borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6,
     gap: 6,
+    borderWidth: 1,
+    borderColor: GLASS.borderSubtle,
   },
   clusterPillIcon: { fontSize: 14 },
   clusterPillText: { color: '#AAA', fontSize: 12, fontWeight: '600' },
@@ -200,8 +204,9 @@ const styles = StyleSheet.create({
   },
   upcomingCard: { width: '25%', padding: 4 },
   upcomingInner: {
-    borderRadius: 14, padding: 10, borderWidth: 1,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderRadius: GLASS.radiusSm, padding: 10, borderWidth: 1,
+    backgroundColor: GLASS.bgLight,
+    borderColor: GLASS.borderSubtle,
     alignItems: 'center',
   },
   upcomingIconBox: {

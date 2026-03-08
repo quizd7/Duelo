@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
+import { GLASS } from '../theme/glassTheme';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const { width } = Dimensions.get('window');
@@ -186,8 +187,8 @@ export default function SuperCategoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  loadingContainer: { flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
+  container: { flex: 1, backgroundColor: 'transparent' },
+  loadingContainer: { flex: 1, backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' },
   errorText: { color: '#666', fontSize: 16, marginBottom: 16 },
   backBtn: { paddingVertical: 10, paddingHorizontal: 20 },
   backBtnText: { color: '#8A2BE2', fontSize: 16, fontWeight: '600' },
@@ -209,8 +210,8 @@ const styles = StyleSheet.create({
   clusterSection: { marginBottom: 16 },
   clusterHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 16,
-    padding: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: GLASS.bg, borderRadius: GLASS.radius,
+    padding: 16, borderWidth: 1, borderColor: GLASS.borderCyan,
   },
   clusterHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   clusterIcon: { fontSize: 28 },
@@ -228,8 +229,9 @@ const styles = StyleSheet.create({
     width: '25%', padding: 4,
   },
   themeCardInner: {
-    borderRadius: 14, padding: 8, borderWidth: 1,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: GLASS.radiusSm, padding: 8, borderWidth: 1,
+    backgroundColor: GLASS.bg,
+    borderColor: GLASS.borderSubtle,
     alignItems: 'center', minHeight: 100,
   },
   themeIconBox: {

@@ -9,6 +9,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
+import { GLASS } from '../theme/glassTheme';
 
 const { width } = Dimensions.get('window');
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
@@ -564,8 +565,8 @@ export default function CategoryDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  loadingContainer: { flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
+  container: { flex: 1, backgroundColor: 'transparent' },
+  loadingContainer: { flex: 1, backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' },
   scrollContent: { paddingBottom: 40 },
 
   // Back
@@ -574,8 +575,8 @@ const styles = StyleSheet.create({
 
   // Header Card
   headerCard: {
-    marginHorizontal: 16, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.04)',
-    padding: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', marginBottom: 20,
+    marginHorizontal: 16, borderRadius: GLASS.radiusLg, backgroundColor: GLASS.bg,
+    padding: 20, borderWidth: 1, borderColor: GLASS.borderCyan, marginBottom: 20,
   },
   headerTop: { flexDirection: 'row', marginBottom: 20 },
   catImageBox: { width: 80, height: 80, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
@@ -594,7 +595,7 @@ const styles = StyleSheet.create({
   playBtnIcon: { fontSize: 16 },
   playBtnText: { color: '#FFF', fontSize: 14, fontWeight: '800' },
   followBtn: {
-    backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: GLASS.bgLight, borderWidth: 1, borderColor: GLASS.borderSubtle,
   },
   followingBtn: {
     backgroundColor: 'rgba(0,255,157,0.1)', borderWidth: 1, borderColor: 'rgba(0,255,157,0.3)',
@@ -641,9 +642,9 @@ const styles = StyleSheet.create({
 
   // Post Card
   postCard: {
-    marginHorizontal: 16, backgroundColor: 'rgba(255,255,255,0.04)',
+    marginHorizontal: 16, backgroundColor: GLASS.bg,
     borderRadius: 16, padding: 16, marginBottom: 12,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1, borderColor: GLASS.borderSubtle,
   },
   postHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   postAvatar: {
@@ -686,7 +687,7 @@ const styles = StyleSheet.create({
   // Create Post Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'flex-end' },
   createModalContent: {
-    backgroundColor: '#1A1A1A', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    backgroundColor: GLASS.bgDark, borderTopLeftRadius: 24, borderTopRightRadius: 24,
     paddingHorizontal: 20, paddingTop: 16, paddingBottom: 40, minHeight: 300,
   },
   createModalHeader: {
@@ -717,7 +718,7 @@ const styles = StyleSheet.create({
 
   // Leaderboard Modal
   leaderModalContent: {
-    backgroundColor: '#1A1A1A', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    backgroundColor: GLASS.bgDark, borderTopLeftRadius: 24, borderTopRightRadius: 24,
     paddingHorizontal: 20, paddingTop: 16, paddingBottom: 40, maxHeight: '80%',
   },
   leaderModalHeader: {

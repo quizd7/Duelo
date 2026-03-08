@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 import os
@@ -27,6 +27,10 @@ JWT_SECRET = os.environ.get('JWT_SECRET', 'duelo_secret')
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
+
+@api_router.get("/static/fond_duelo.webp")
+async def serve_bg():
+    return FileResponse(ROOT_DIR / "static" / "fond_duelo.webp", media_type="image/webp")
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)

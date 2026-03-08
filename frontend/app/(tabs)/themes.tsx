@@ -16,6 +16,7 @@ import Svg, { Circle } from 'react-native-svg';
 import { BlurView } from 'expo-blur';
 import DueloHeader from '../../components/DueloHeader';
 import { GlassIconFrame } from '../../components/GlassIconFrame';
+import { GLASS } from '../../theme/glassTheme';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
@@ -725,7 +726,7 @@ const forgeStyles = StyleSheet.create({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: 'transparent',
   },
   loadCenter: {
     flex: 1,
@@ -776,7 +777,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: GLASS.bg,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
     gap: 6,
@@ -847,7 +848,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: CARD_H,
     borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: GLASS.bg,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -892,7 +893,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: GLASS.bg,
   },
   lockText: {
     fontSize: 9,
@@ -913,7 +914,7 @@ const styles = StyleSheet.create({
   topicCardInner: {
     width: '100%',
     borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: GLASS.bg,
     borderWidth: 1,
     alignItems: 'center',
     paddingVertical: 14,
@@ -954,7 +955,7 @@ const styles = StyleSheet.create({
   gridCardInner: {
     width: '100%',
     borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: GLASS.bg,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1033,9 +1034,9 @@ const styles = StyleSheet.create({
   },
   previewCard: {
     borderRadius: 24,
-    backgroundColor: '#111',
+    backgroundColor: GLASS.bgDark,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: GLASS.borderCyan,
     alignItems: 'center',
     paddingVertical: 28,
     paddingHorizontal: 20,
@@ -1115,7 +1116,7 @@ const styles = StyleSheet.create({
     height: 30,
   },
   previewGoal: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: GLASS.bg,
     borderRadius: 12,
     padding: 12,
     width: '100%',
