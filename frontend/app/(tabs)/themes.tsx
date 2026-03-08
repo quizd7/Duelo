@@ -17,6 +17,7 @@ import { BlurView } from 'expo-blur';
 import DueloHeader from '../../components/DueloHeader';
 import { GlassIconFrame } from '../../components/GlassIconFrame';
 import { GLASS } from '../../theme/glassTheme';
+import CosmicBackground from '../../components/CosmicBackground';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
@@ -327,6 +328,7 @@ export default function ThemesScreen() {
   }
 
   return (
+    <CosmicBackground>
     <SafeAreaView style={styles.container}>
       <DueloHeader />
 
@@ -645,6 +647,7 @@ export default function ThemesScreen() {
         </Pressable>
       </Modal>
     </SafeAreaView>
+    </CosmicBackground>
   );
 }
 

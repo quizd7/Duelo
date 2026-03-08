@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { GLASS } from '../../theme/glassTheme';
 import DueloHeader from '../../components/DueloHeader';
+import CosmicBackground from '../../components/CosmicBackground';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -61,9 +62,11 @@ export default function HomeScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#8A2BE2" />
-      </View>
+      <CosmicBackground>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#8A2BE2" />
+        </View>
+      </CosmicBackground>
     );
   }
 
@@ -72,10 +75,11 @@ export default function HomeScreen() {
   const upcomingFiltered = UPCOMING_CATS.filter(c => !loadedIds.has(c.id));
 
   return (
-    <SafeAreaView style={styles.container}>
-      <DueloHeader />
+    <CosmicBackground>
+      <SafeAreaView style={styles.container}>
+        <DueloHeader />
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <Text style={styles.greeting}>Salut, {pseudo || 'Joueur'} 👋</Text>
         <Text style={styles.sectionTitle}>SUPER CATÉGORIES</Text>
 
@@ -140,7 +144,8 @@ export default function HomeScreen() {
 
         <View style={{ height: 30 }} />
       </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </CosmicBackground>
   );
 }
 

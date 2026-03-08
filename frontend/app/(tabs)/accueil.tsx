@@ -14,6 +14,7 @@ import Animated, {
   Easing, interpolate,
 } from 'react-native-reanimated';
 import DueloHeader from '../../components/DueloHeader';
+import CosmicBackground from '../../components/CosmicBackground';
 
 import { GLASS } from '../../theme/glassTheme';
 
@@ -427,16 +428,19 @@ export default function AccueilScreen() {
 
   if (loading) {
     return (
+      <CosmicBackground>
       <SafeAreaView style={styles.container}>
         <DueloHeader />
         <View style={styles.loadingWrap}>
           <ActivityIndicator size="large" color="#8A2BE2" />
         </View>
       </SafeAreaView>
+      </CosmicBackground>
     );
   }
 
   return (
+    <CosmicBackground>
     <SafeAreaView style={styles.container}>
       <DueloHeader />
 
@@ -573,6 +577,7 @@ export default function AccueilScreen() {
         <View style={{ height: 32 }} />
       </ScrollView>
     </SafeAreaView>
+    </CosmicBackground>
   );
 }
 

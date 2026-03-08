@@ -9,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import DueloHeader from '../../components/DueloHeader';
 import { GLASS } from '../../theme/glassTheme';
+import CosmicBackground from '../../components/CosmicBackground';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const GRID_PAD = 16;
@@ -95,11 +96,12 @@ export default function ProfileScreen() {
   };
 
   if (loading) {
-    return <View style={s.loadingContainer}><ActivityIndicator size="large" color="#8A2BE2" /></View>;
+    return <CosmicBackground><View style={s.loadingContainer}><ActivityIndicator size="large" color="#8A2BE2" /></View></CosmicBackground>;
   }
   if (!profile) {
     return (
-      <SafeAreaView style={s.container}>
+      <CosmicBackground>
+        <SafeAreaView style={s.container}>
         <View style={s.emptyContainer}>
           <Text style={s.emptyText}>Connecte-toi pour voir ton profil</Text>
           <TouchableOpacity style={s.loginBtn} onPress={() => router.replace('/')}>
@@ -107,6 +109,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
+      </CosmicBackground>
     );
   }
 
@@ -114,6 +117,7 @@ export default function ProfileScreen() {
   const displayTitle = user.selected_title || (all_unlocked_titles && all_unlocked_titles.length > 0 ? all_unlocked_titles[0].title : '');
 
   return (
+    <CosmicBackground>
     <SafeAreaView style={s.container}>
       <DueloHeader />
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
@@ -353,6 +357,7 @@ export default function ProfileScreen() {
         </View>
       </Modal>
     </SafeAreaView>
+    </CosmicBackground>
   );
 }
 

@@ -16,6 +16,7 @@ import Animated, {
 import Svg, { Circle } from 'react-native-svg';
 import DueloHeader from '../../components/DueloHeader';
 import { GLASS } from '../../theme/glassTheme';
+import CosmicBackground from '../../components/CosmicBackground';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -481,6 +482,7 @@ export default function PlayersScreen() {
   const sectionColor = activeSection === 'pulse' ? '#8A2BE2' : activeSection === 'tribus' ? '#FFD700' : '#10B981';
 
   return (
+    <CosmicBackground>
     <SafeAreaView style={s.container}>
       <DueloHeader />
 
@@ -717,6 +719,7 @@ export default function PlayersScreen() {
         </ScrollView>
       )}
     </SafeAreaView>
+    </CosmicBackground>
   );
 }
 
