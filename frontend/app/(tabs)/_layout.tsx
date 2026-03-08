@@ -52,7 +52,7 @@ export default function TabLayout() {
         tabBarShowLabel: false,
         tabBarActiveTintColor: '#00FFFF',
         tabBarInactiveTintColor: '#525252',
-        sceneStyle: { backgroundColor: '#050510' },
+        sceneStyle: { backgroundColor: 'transparent' },
       }}
     >
       <Tabs.Screen

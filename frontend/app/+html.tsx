@@ -26,8 +26,13 @@ export default function Root({ children }: { children: React.ReactNode }) {
           #root > div > div > div > div,
           #root > div > div > div > div > div,
           #root > div > div > div > div > div > div,
-          #root > div > div > div > div > div > div > div {
-            background: #050510 url('${API_URL}/api/static/fond_duelo.webp') center/cover fixed no-repeat !important;
+          #root > div > div > div > div > div > div > div,
+          #root > div > div > div > div > div > div > div > div,
+          #root > div > div > div > div > div > div > div > div > div,
+          #root > div > div > div > div > div > div > div > div > div > div,
+          #root > div > div > div > div > div > div > div > div > div > div > div,
+          #root > div > div > div > div > div > div > div > div > div > div > div > div {
+            background-color: transparent !important;
           }
           body::before {
             content: '';

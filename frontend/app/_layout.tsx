@@ -24,8 +24,13 @@ function useCosmicBackground() {
       #root > div > div > div > div,
       #root > div > div > div > div > div,
       #root > div > div > div > div > div > div,
-      #root > div > div > div > div > div > div > div {
-        background: #050510 url('${bgUrl}') center/cover fixed no-repeat !important;
+      #root > div > div > div > div > div > div > div,
+      #root > div > div > div > div > div > div > div > div,
+      #root > div > div > div > div > div > div > div > div > div,
+      #root > div > div > div > div > div > div > div > div > div > div,
+      #root > div > div > div > div > div > div > div > div > div > div > div,
+      #root > div > div > div > div > div > div > div > div > div > div > div > div {
+        background-color: transparent !important;
       }
       body::before {
         content: '';
@@ -50,8 +55,8 @@ export default function RootLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: '#050510' },
-          animation: 'slide_from_right',
+          contentStyle: { backgroundColor: Platform.OS === 'web' ? 'transparent' : '#050510' },
+          animation: Platform.OS === 'web' ? 'none' : 'slide_from_right',
           animationDuration: 300,
         }}
       />
@@ -62,6 +67,6 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#050510',
+    backgroundColor: Platform.OS === 'web' ? 'transparent' : '#050510',
   },
 });
