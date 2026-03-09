@@ -9,10 +9,10 @@ const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 // Header icon assets
 const HEADER_ICONS = {
-  search: require('../assets/header/search.png'),
-  message: require('../assets/header/message.png'),
-  notification: require('../assets/header/notification.png'),
-  logo: require('../assets/header/duelo_logo.png'),
+  search: require('../assets/header/search.webp'),
+  message: require('../assets/header/message.webp'),
+  notification: require('../assets/header/notification.webp'),
+  logo: require('../assets/header/duelo_logo.webp'),
 };
 
 export default function DueloHeader() {
