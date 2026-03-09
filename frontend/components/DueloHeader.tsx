@@ -77,7 +77,7 @@ export default function DueloHeader() {
           style={styles.iconBtn}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            router.push('/(tabs)/players');
+            router.push('/conversations');
           }}
           activeOpacity={0.7}
         >
