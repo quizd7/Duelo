@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Animated,
   KeyboardAvoidingView, Platform, Keyboard, ActivityIndicator, Dimensions,
-  Image,
+  Image, ImageBackground,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -10,9 +10,55 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { GLASS } from '../theme/glassTheme';
 
-const { width } = Dimensions.get('window');
+const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 const DUELO_LOGO = require('../assets/header/duelo_logo.webp');
+const BG_IMAGE = require('../assets/images/fond_duelo.webp');
+
+// Floating orb component
+function FloatingOrb({ size, color, startX, startY, duration, delay }: {
+  size: number; color: string; startX: number; startY: number; duration: number; delay: number;
+}) {
+  const floatY = useRef(new Animated.Value(0)).current;
+  const floatX = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(opacity, { toValue: 1, duration: 1200, delay, useNativeDriver: true }).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatY, { toValue: -20, duration, useNativeDriver: true }),
+        Animated.timing(floatY, { toValue: 10, duration: duration * 0.8, useNativeDriver: true }),
+      ])
+    ).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatX, { toValue: 8, duration: duration * 1.2, useNativeDriver: true }),
+        Animated.timing(floatX, { toValue: -8, duration: duration * 1.2, useNativeDriver: true }),
+      ])
+    ).start();
+  }, []);
+
+  return (
+    <Animated.View
+      style={{
+        position: 'absolute',
+        left: startX,
+        top: startY,
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: color,
+        opacity,
+        transform: [{ translateY: floatY }, { translateX: floatX }],
+        shadowColor: color,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.8,
+        shadowRadius: size,
+      }}
+    />
+  );
+}
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -23,27 +69,28 @@ export default function WelcomeScreen() {
   const [error, setError] = useState('');
   const [initialLoading, setInitialLoading] = useState(true);
 
+  const scrollY = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const slideAnim = useRef(new Animated.Value(60)).current;
+  const logoFloat = useRef(new Animated.Value(0)).current;
   const checkTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     checkExistingUser();
-    Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 600, useNativeDriver: true }),
+
+    // Entrance animations
+    Animated.stagger(200, [
+      Animated.timing(fadeAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 800, useNativeDriver: true }),
     ]).start();
 
-    // Pulse animation for logo
-    const pulse = Animated.loop(
+    // Continuous logo floating
+    Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.05, duration: 1500, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 1500, useNativeDriver: true }),
+        Animated.timing(logoFloat, { toValue: -8, duration: 2200, useNativeDriver: true }),
+        Animated.timing(logoFloat, { toValue: 8, duration: 2200, useNativeDriver: true }),
       ])
-    );
-    pulse.start();
-    return () => pulse.stop();
+    ).start();
   }, []);
 
   const checkExistingUser = async () => {
@@ -126,92 +173,217 @@ export default function WelcomeScreen() {
     );
   }
 
+  // Parallax interpolations
+  const bgTranslateY = scrollY.interpolate({
+    inputRange: [-100, 0, 300],
+    outputRange: [30, 0, -90],
+    extrapolate: 'clamp',
+  });
+
+  const logoScale = scrollY.interpolate({
+    inputRange: [-100, 0, 200],
+    outputRange: [1.15, 1, 0.85],
+    extrapolate: 'clamp',
+  });
+
+  const logoOpacity = scrollY.interpolate({
+    inputRange: [0, 180],
+    outputRange: [1, 0.3],
+    extrapolate: 'clamp',
+  });
+
+  const taglineTranslateY = scrollY.interpolate({
+    inputRange: [-100, 0, 200],
+    outputRange: [15, 0, -40],
+    extrapolate: 'clamp',
+  });
+
+  const orbLayerTranslate = scrollY.interpolate({
+    inputRange: [-100, 0, 300],
+    outputRange: [20, 0, -60],
+    extrapolate: 'clamp',
+  });
+
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
-        <TouchableOpacity activeOpacity={1} onPress={Keyboard.dismiss} style={styles.inner}>
-          <Animated.View style={[styles.header, { opacity: fadeAnim, transform: [{ scale: pulseAnim }] }]}>
-            <Image source={DUELO_LOGO} style={styles.logoImage} resizeMode="contain" />
-          </Animated.View>
+    <View style={styles.root}>
+      {/* Parallax background layer */}
+      <Animated.View style={[styles.bgLayer, { transform: [{ translateY: bgTranslateY }] }]}>
+        <Image source={BG_IMAGE} style={styles.bgImage} resizeMode="cover" />
+        <View style={styles.bgOverlay} />
+      </Animated.View>
 
-          {/* Tagline pill */}
-          <Animated.View style={[styles.taglinePill, { opacity: fadeAnim }]}>
-            <Text style={styles.taglineText}>
-              Joues à plus de 500 thèmes !{'\n'}Deviens le top 1 autour de chez toi !
-            </Text>
-          </Animated.View>
+      {/* Floating orbs layer (mid-depth parallax) */}
+      <Animated.View style={[styles.orbLayer, { transform: [{ translateY: orbLayerTranslate }] }]}>
+        <FloatingOrb size={6} color="rgba(0,255,255,0.6)" startX={SCREEN_W * 0.15} startY={SCREEN_H * 0.12} duration={3000} delay={0} />
+        <FloatingOrb size={4} color="rgba(138,43,226,0.7)" startX={SCREEN_W * 0.8} startY={SCREEN_H * 0.08} duration={2600} delay={400} />
+        <FloatingOrb size={8} color="rgba(0,255,255,0.4)" startX={SCREEN_W * 0.65} startY={SCREEN_H * 0.25} duration={3500} delay={800} />
+        <FloatingOrb size={5} color="rgba(255,255,255,0.3)" startX={SCREEN_W * 0.3} startY={SCREEN_H * 0.35} duration={2800} delay={200} />
+        <FloatingOrb size={3} color="rgba(138,43,226,0.5)" startX={SCREEN_W * 0.9} startY={SCREEN_H * 0.55} duration={3200} delay={600} />
+        <FloatingOrb size={6} color="rgba(0,255,255,0.3)" startX={SCREEN_W * 0.05} startY={SCREEN_H * 0.7} duration={2900} delay={1000} />
+        <FloatingOrb size={4} color="rgba(255,255,255,0.2)" startX={SCREEN_W * 0.5} startY={SCREEN_H * 0.85} duration={3400} delay={300} />
+      </Animated.View>
 
-          <Animated.View style={[styles.formContainer, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-            <View style={styles.glassCard}>
-              <Text style={styles.formTitle}>Choisis ton pseudo</Text>
-              <Text style={styles.formHint}>Unique et visible par tous les joueurs</Text>
+      {/* Foreground scrollable content */}
+      <SafeAreaView style={styles.container}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
+        >
+          <Animated.ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            onScroll={Animated.event(
+              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+              { useNativeDriver: true }
+            )}
+            scrollEventThrottle={16}
+          >
+            <TouchableOpacity activeOpacity={1} onPress={Keyboard.dismiss} style={styles.inner}>
+              {/* Logo with parallax + float */}
+              <Animated.View style={[
+                styles.header,
+                {
+                  opacity: Animated.multiply(fadeAnim, logoOpacity),
+                  transform: [
+                    { scale: logoScale },
+                    { translateY: logoFloat },
+                  ],
+                },
+              ]}>
+                <Image source={DUELO_LOGO} style={styles.logoImage} resizeMode="contain" />
+              </Animated.View>
 
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  testID="pseudo-input"
-                  style={[
-                    styles.input,
-                    available === true && styles.inputValid,
-                    available === false && styles.inputError,
-                  ]}
-                  placeholder="Ex: QuizMaster_42"
-                  placeholderTextColor="#525252"
-                  value={pseudo}
-                  onChangeText={setPseudo}
-                  autoCapitalize="none"
-                  maxLength={20}
-                  autoCorrect={false}
-                />
-                {checking && (
-                  <ActivityIndicator style={styles.inputIcon} size="small" color="#8A2BE2" />
-                )}
-                {!checking && available === true && (
-                  <Text style={[styles.inputIcon, styles.checkMark]}>✓</Text>
-                )}
-                {!checking && available === false && (
-                  <Text style={[styles.inputIcon, styles.crossMark]}>✗</Text>
-                )}
-              </View>
+              {/* Tagline pill with parallax */}
+              <Animated.View style={[
+                styles.taglinePill,
+                {
+                  opacity: fadeAnim,
+                  transform: [{ translateY: taglineTranslateY }],
+                },
+              ]}>
+                <Text style={styles.taglineText}>
+                  Joues à plus de 500 thèmes !{'\n'}Deviens le top 1 autour de chez toi !
+                </Text>
+              </Animated.View>
 
-              {available === false && <Text style={styles.errorText}>Ce pseudo est déjà pris</Text>}
-              {error ? <Text style={styles.errorText}>{error}</Text> : null}
+              {/* Form */}
+              <Animated.View style={[styles.formContainer, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+                <View style={styles.glassCard}>
+                  <Text style={styles.formTitle}>Choisis ton pseudo</Text>
+                  <Text style={styles.formHint}>Unique et visible par tous les joueurs</Text>
 
-              <TouchableOpacity
-                testID="play-guest-btn"
-                style={[styles.playButton, (!available || loading) && styles.playButtonDisabled]}
-                onPress={handleGuestLogin}
-                disabled={!available || loading}
-                activeOpacity={0.8}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <Text style={styles.playButtonText}>JOUER EN INVITÉ</Text>
-                )}
-              </TouchableOpacity>
+                  <View style={styles.inputWrapper}>
+                    <TextInput
+                      testID="pseudo-input"
+                      style={[
+                        styles.input,
+                        available === true && styles.inputValid,
+                        available === false && styles.inputError,
+                      ]}
+                      placeholder="Ex: QuizMaster_42"
+                      placeholderTextColor="#525252"
+                      value={pseudo}
+                      onChangeText={setPseudo}
+                      autoCapitalize="none"
+                      maxLength={20}
+                      autoCorrect={false}
+                    />
+                    {checking && (
+                      <ActivityIndicator style={styles.inputIcon} size="small" color="#8A2BE2" />
+                    )}
+                    {!checking && available === true && (
+                      <Text style={[styles.inputIcon, styles.checkMark]}>✓</Text>
+                    )}
+                    {!checking && available === false && (
+                      <Text style={[styles.inputIcon, styles.crossMark]}>✗</Text>
+                    )}
+                  </View>
 
-              
-            </View>
-          </Animated.View>
-        </TouchableOpacity>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+                  {available === false && <Text style={styles.errorText}>Ce pseudo est déjà pris</Text>}
+                  {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+                  <TouchableOpacity
+                    testID="play-guest-btn"
+                    style={[styles.playButton, (!available || loading) && styles.playButtonDisabled]}
+                    onPress={handleGuestLogin}
+                    disabled={!available || loading}
+                    activeOpacity={0.8}
+                  >
+                    {loading ? (
+                      <ActivityIndicator color="#FFF" />
+                    ) : (
+                      <Text style={styles.playButtonText}>JOUER EN INVITÉ</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </Animated.View>
+
+              {/* Bottom spacer for scroll room */}
+              <View style={{ height: 80 }} />
+            </TouchableOpacity>
+          </Animated.ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: '#050510',
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#050510',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // Parallax background
+  bgLayer: {
+    ...StyleSheet.absoluteFillObject,
+    top: -40,
+    bottom: -40,
+  },
+  bgImage: {
+    width: '100%' as any,
+    height: '100%' as any,
+  },
+  bgOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 10, 0.15)',
+  },
+
+  // Floating orbs
+  orbLayer: {
+    ...StyleSheet.absoluteFillObject,
+    pointerEvents: 'none',
+  },
+
+  // Content
   container: { flex: 1, backgroundColor: 'transparent' },
-  loadingContainer: { flex: 1, backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center' },
   keyboardView: { flex: 1 },
-  inner: { flex: 1, paddingHorizontal: 24, justifyContent: 'center' },
-  header: { alignItems: 'center', marginBottom: 20 },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+  inner: {
+    paddingHorizontal: 24,
+  },
+
+  // Logo
+  header: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
   logoImage: {
     width: 220,
     height: 56,
   },
+
+  // Tagline
   taglinePill: {
     alignSelf: 'center',
     backgroundColor: 'rgba(255,255,255,0.06)',
@@ -237,6 +409,8 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
   },
+
+  // Form
   formContainer: { marginBottom: 32 },
   glassCard: {
     backgroundColor: GLASS.bg,
