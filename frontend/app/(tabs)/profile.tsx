@@ -64,12 +64,42 @@ export default function ProfileScreen() {
 
   const loadProfile = async () => {
     const userId = await AsyncStorage.getItem('duelo_user_id');
+    const pseudo = await AsyncStorage.getItem('duelo_pseudo');
+    const avatarSeed = await AsyncStorage.getItem('duelo_avatar_seed');
     if (!userId) { setLoading(false); return; }
     try {
       const res = await fetch(`${API_URL}/api/profile-v2/${userId}`);
-      const data = await res.json();
-      setProfile(data);
-    } catch {}
+      if (res.ok) {
+        const data = await res.json();
+        setProfile(data);
+      } else {
+        // API failed but user is logged in - show basic profile from local storage
+        setProfile({
+          user: {
+            id: userId, pseudo: pseudo || 'Joueur', avatar_seed: avatarSeed || '',
+            is_guest: true, total_xp: 0, selected_title: null,
+            country: null, country_flag: '',
+            matches_played: 0, matches_won: 0,
+            best_streak: 0, current_streak: 0, streak_badge: '',
+            win_rate: 0, followers_count: 0, following_count: 0,
+          },
+          themes: [], all_unlocked_titles: [], match_history: [],
+        });
+      }
+    } catch {
+      // Network error - show basic profile from local storage
+      setProfile({
+        user: {
+          id: userId, pseudo: pseudo || 'Joueur', avatar_seed: avatarSeed || '',
+          is_guest: true, total_xp: 0, selected_title: null,
+          country: null, country_flag: '',
+          matches_played: 0, matches_won: 0,
+          best_streak: 0, current_streak: 0, streak_badge: '',
+          win_rate: 0, followers_count: 0, following_count: 0,
+        },
+        themes: [], all_unlocked_titles: [], match_history: [],
+      });
+    }
     setLoading(false);
   };
 
@@ -202,7 +232,7 @@ export default function ProfileScreen() {
           </>
         )}
 
-        {themes.length === 0 && (
+        {(!themes || themes.length === 0) && (
           <>
             <Text style={s.sectionTitle}>MES THÈMES</Text>
             <Text style={s.noHistory}>Joue un quiz pour commencer à progresser !</Text>
@@ -255,7 +285,7 @@ export default function ProfileScreen() {
 
         {/* ── Match History ── */}
         <Text style={s.sectionTitle}>HISTORIQUE</Text>
-        {match_history.length === 0 ? (
+        {match_history && match_history.length === 0 ? (
           <Text style={s.noHistory}>Aucun match pour le moment</Text>
         ) : (
           match_history.map((m) => (
